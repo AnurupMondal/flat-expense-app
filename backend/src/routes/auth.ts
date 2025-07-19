@@ -3,6 +3,13 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../config/database";
 import { User, JWTPayload } from "../types";
+import logger from "../utils/logger";
+import {
+  logAuthEvent,
+  logBusinessOperation,
+  logDatabaseOperation,
+  logSuccess,
+} from "../middleware/loggingMiddleware";
 
 const router = express.Router();
 
@@ -11,8 +18,18 @@ router.post("/register", async (req, res) => {
   try {
     const { email, password, name, phone, building_id, flat_number } = req.body;
 
+    logger.auth("User registration attempt", { email, name });
+
     // Validate input
     if (!email || !password || !name) {
+      logger.validation(
+        "Registration validation failed - missing required fields",
+        {
+          email: !!email,
+          password: !!password,
+          name: !!name,
+        }
+      );
       return res.status(400).json({
         success: false,
         error: "Email, password, and name are required",
@@ -25,6 +42,12 @@ router.post("/register", async (req, res) => {
       [email]
     );
     if (existingUser.rows.length > 0) {
+      logAuthEvent(
+        "Registration failed - user exists",
+        undefined,
+        email,
+        false
+      );
       return res.status(400).json({
         success: false,
         error: "User already exists with this email",
@@ -56,6 +79,15 @@ router.post("/register", async (req, res) => {
     const result = await pool.query(query, values);
     const newUser = result.rows[0];
 
+    logDatabaseOperation("INSERT", "users", true, { userId: newUser.id });
+    logBusinessOperation("CREATE", "user", newUser.id, newUser.id, {
+      email,
+      role: "resident",
+    });
+    logAuthEvent("User registered successfully", newUser.id, email, true);
+
+    logSuccess(req, res, "User registration completed", { userId: newUser.id });
+
     return res.status(201).json({
       success: true,
       data: {
@@ -74,7 +106,15 @@ router.post("/register", async (req, res) => {
       message: "Registration successful. Awaiting admin approval.",
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    const { email } = req.body; // Get email from request body for logging
+    logger.logError(error as Error, "REGISTRATION_ERROR", { email });
+    logAuthEvent(
+      "Registration failed - server error",
+      undefined,
+      email,
+      false,
+      { error: (error as Error).message }
+    );
     return res.status(500).json({
       success: false,
       error: "Server error during registration",
@@ -85,22 +125,21 @@ router.post("/register", async (req, res) => {
 // Login user
 router.post("/login", async (req, res) => {
   try {
-    console.log("Login request received");
-    console.log("Request body:", req.body);
-    console.log("Content-Type:", req.headers["content-type"]);
-
     const { email, password } = req.body;
+
+    logger.auth("Login attempt", { email });
 
     // Validate input
     if (!email || !password) {
-      console.log("Missing email or password");
+      logger.validation("Login validation failed - missing credentials", {
+        email: !!email,
+        password: !!password,
+      });
       return res.status(400).json({
         success: false,
         error: "Email and password are required",
       });
     }
-
-    console.log("Attempting login for email:", email);
 
     // Find user
     const query = `
@@ -111,7 +150,7 @@ router.post("/login", async (req, res) => {
     const result = await pool.query(query, [email.toLowerCase()]);
 
     if (result.rows.length === 0) {
-      console.log("User not found:", email);
+      logAuthEvent("Login failed - user not found", undefined, email, false);
       return res.status(401).json({
         success: false,
         error: "Invalid credentials",
@@ -119,15 +158,17 @@ router.post("/login", async (req, res) => {
     }
 
     const user = result.rows[0];
-    console.log("User found:", {
-      id: user.id,
+    logger.auth("User found for login", {
+      userId: user.id,
       email: user.email,
       status: user.status,
     });
 
     // Check if user is approved
     if (user.status !== "approved") {
-      console.log("User not approved:", user.status);
+      logAuthEvent("Login failed - user not approved", user.id, email, false, {
+        status: user.status,
+      });
       return res.status(401).json({
         success: false,
         error: "Account is pending approval or has been rejected",
@@ -137,6 +178,7 @@ router.post("/login", async (req, res) => {
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
+      logAuthEvent("Login failed - invalid password", user.id, email, false);
       return res.status(401).json({
         success: false,
         error: "Invalid credentials",
@@ -164,6 +206,13 @@ router.post("/login", async (req, res) => {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     await pool.query(sessionQuery, [user.id, tokenHash, expiresAt]);
 
+    logDatabaseOperation("INSERT", "user_sessions", true, { userId: user.id });
+    logAuthEvent("Login successful", user.id, email, true, { role: user.role });
+    logSuccess(req, res, "User login completed", {
+      userId: user.id,
+      role: user.role,
+    });
+
     return res.json({
       success: true,
       data: {
@@ -182,7 +231,11 @@ router.post("/login", async (req, res) => {
       message: "Login successful",
     });
   } catch (error) {
-    console.error("Login error:", error);
+    const { email } = req.body;
+    logger.logError(error as Error, "LOGIN_ERROR", { email });
+    logAuthEvent("Login failed - server error", undefined, email, false, {
+      error: (error as Error).message,
+    });
     return res.status(500).json({
       success: false,
       error: "Server error during login",

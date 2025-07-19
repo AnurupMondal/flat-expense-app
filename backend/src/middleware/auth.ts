@@ -4,7 +4,14 @@ import { pool } from "../config/database";
 import { JWTPayload } from "../types";
 
 export interface AuthenticatedRequest extends Request {
-  user?: JWTPayload;
+  user?: {
+    id: number;
+    userId: number;
+    email: string;
+    role: string;
+    buildingId?: number;
+    [key: string]: any;
+  };
 }
 
 // Authentication middleware
@@ -46,6 +53,7 @@ export const authenticate = async (
     }
 
     req.user = {
+      id: decoded.userId,
       userId: decoded.userId,
       email: decoded.email,
       role: decoded.role,

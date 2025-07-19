@@ -148,10 +148,10 @@ export interface PaginatedResponse<T> {
 
 // Authentication types
 export interface JWTPayload {
-  userId: string;
+  userId: number; // Changed from string to number
   email: string;
   role: string;
-  buildingId?: string;
+  buildingId?: number; // Changed from string to number
 }
 
 export interface LoginRequest {

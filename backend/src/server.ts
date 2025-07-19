@@ -8,8 +8,10 @@ import dotenv from "dotenv";
 
 import { errorHandler, notFound } from "./middleware/errorMiddleware";
 import { rateLimiter } from "./middleware/rateLimiter";
+import { requestLogger, errorLogger } from "./middleware/loggingMiddleware";
 import { connectDB } from "./config/database";
 import { ensureAdminUser } from "./utils/ensureAdminUser";
+import logger from "./utils/logger";
 
 // Route imports
 import authRoutes from "./routes/auth";
@@ -27,6 +29,11 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 const server = createServer(app);
+
+logger.system("Server initialization started", {
+  nodeEnv: process.env.NODE_ENV,
+  port: process.env.API_PORT || 3001,
+});
 
 // Database connection
 connectDB();
@@ -47,6 +54,9 @@ app.use(
 
 // Rate limiting
 app.use(rateLimiter);
+
+// Request logging middleware (before other middleware)
+app.use(requestLogger);
 
 // Body parsing middleware
 app.use(compression());
@@ -80,11 +90,11 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
     (error as any).status === 400 &&
     "body" in error
   ) {
-    console.error("JSON Parse Error:", error.message);
-    console.error("Request path:", req.path);
-    console.error("Request method:", req.method);
-    console.error("Content-Type:", req.get("Content-Type"));
-    console.error("Error Stack:", error.stack);
+    logger.logError(error, "JSON_PARSE_ERROR", {
+      path: req.path,
+      method: req.method,
+      contentType: req.get("Content-Type"),
+    });
     return res.status(400).json({
       success: false,
       error: "Invalid JSON format in request body",
@@ -93,13 +103,15 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   return next(error);
 });
 
+// Remove morgan as we're using our custom logger now
 // Logging middleware
-if (process.env.NODE_ENV !== "test") {
-  app.use(morgan("combined"));
-}
+// if (process.env.NODE_ENV !== "test") {
+//   app.use(morgan("combined"));
+// }
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
+  logger.api("Health check requested");
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
@@ -121,6 +133,9 @@ app.use("/api/upload", uploadRoutes);
 // Serve uploaded files
 app.use("/uploads", express.static("uploads"));
 
+// Error logging middleware (before error handlers)
+app.use(errorLogger);
+
 // Error handling middleware
 app.use(notFound);
 app.use(errorHandler);
@@ -129,25 +144,25 @@ app.use(errorHandler);
 const PORT = process.env.API_PORT || 3001;
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(
-    `🔐 CORS origin: ${process.env.CORS_ORIGIN || "http://localhost:3000"}`
-  );
+  logger.system(`Server running on port ${PORT}`, {
+    port: PORT,
+    healthCheck: `http://localhost:${PORT}/api/health`,
+    corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  });
 });
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
-  console.log("👋 SIGTERM received. Shutting down gracefully...");
+  logger.system("SIGTERM received. Shutting down gracefully...");
   server.close(() => {
-    console.log("✅ Process terminated");
+    logger.system("Process terminated");
   });
 });
 
 process.on("SIGINT", () => {
-  console.log("👋 SIGINT received. Shutting down gracefully...");
+  logger.system("SIGINT received. Shutting down gracefully...");
   server.close(() => {
-    console.log("✅ Process terminated");
+    logger.system("Process terminated");
   });
 });
 

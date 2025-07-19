@@ -97,7 +97,7 @@ router.get("/:id", authenticate, async (req: AuthenticatedRequest, res) => {
     const user = req.user!;
 
     // Users can only view their own profile unless they're admin/super-admin
-    if (user.role === "resident" && user.userId !== id) {
+    if (user.role === "resident" && user.userId !== parseInt(id || "0")) {
       return res.status(403).json({
         success: false,
         error: "Access denied",
@@ -152,7 +152,7 @@ router.put("/:id", authenticate, async (req: AuthenticatedRequest, res) => {
     } = req.body;
 
     // Users can only update their own profile unless they're admin/super-admin
-    if (user.role === "resident" && user.userId !== id) {
+    if (user.role === "resident" && user.userId !== parseInt(id || "0")) {
       return res.status(403).json({
         success: false,
         error: "Access denied",
