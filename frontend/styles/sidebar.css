@@ -1,0 +1,104 @@
+/* Enhanced sidebar animations and states */
+.sidebar-expanded {
+  --sidebar-width: 16rem;
+}
+
+.sidebar-collapsed {
+  --sidebar-width: 3rem;
+}
+
+.sidebar-expanded .menu-item-label {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.2s ease-in-out 0.1s, transform 0.2s ease-in-out 0.1s;
+}
+
+.sidebar-collapsed .menu-item-label {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.sidebar-toggle-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar-toggle-button:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  transform: scale(1.05);
+}
+
+.sidebar-toggle-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Horizontal sidebar styles */
+.horizontal-sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  height: auto;
+  min-height: 60px;
+}
+
+.horizontal-sidebar .scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.horizontal-sidebar .scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+
+.horizontal-sidebar .scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.horizontal-sidebar .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 2px;
+}
+
+.horizontal-sidebar .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* Smooth content area adjustment */
+.sidebar-content-area {
+  transition: margin-left 0.3s ease-in-out;
+}
+
+.sidebar-expanded + .sidebar-content-area {
+  margin-left: var(--sidebar-width);
+}
+
+.sidebar-collapsed + .sidebar-content-area {
+  margin-left: var(--sidebar-width);
+}
+
+/* Responsive adjustments for horizontal sidebar */
+@media (max-width: 768px) {
+  .horizontal-sidebar {
+    min-height: 56px;
+  }
+
+  .horizontal-sidebar .flex {
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Animation for orientation change */
+.sidebar-orientation-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure smooth transitions for all sidebar elements */
+.sidebar-item {
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar-item:hover {
+  transform: translateY(-1px);
+}

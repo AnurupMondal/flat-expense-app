@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: flat-expense-db
+    environment:
+      POSTGRES_USER: flatexpense
+      POSTGRES_PASSWORD: flatexpense123
+      POSTGRES_DB: flat_expense_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - flat-expense-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flatexpense -d flat_expense_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flat-expense-backend
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://flatexpense:flatexpense123@database:5432/flat_expense_db?sslmode=disable
+      JWT_SECRET: your_super_secret_jwt_key_here_change_in_production
+      API_PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - flat-expense-network
+    volumes:
+      - ./backend/uploads:/app/uploads
+    restart: unless-stopped
+
+  # Frontend Next.js App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: flat-expense-frontend
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - flat-expense-network
+    restart: unless-stopped
+
+networks:
+  flat-expense-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
