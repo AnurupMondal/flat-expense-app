@@ -9,6 +9,7 @@ import { ComplaintForm } from "@/components/ui/complaint-form";
 import { BillCard } from "@/components/ui/bill-card";
 import { NotificationCard } from "@/components/ui/notification-card";
 import { BuildingInfo } from "@/components/ui/building-info";
+import { ProfileManager } from "@/components/ui/profile-manager";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -154,6 +155,8 @@ export default function ResidentDashboard({
         return "Notifications";
       case "building-info":
         return "Building Information";
+      case "profile":
+        return "Profile";
       default:
         return "Dashboard";
     }
@@ -385,6 +388,23 @@ export default function ResidentDashboard({
                 residents={buildingResidents}
               />
             )}
+          </>
+        );
+
+      case "profile":
+        return (
+          <>
+            <DashboardHeader
+              title="Profile"
+              description="Manage your account information and settings"
+            />
+            <ProfileManager
+              user={currentUser}
+              onUpdate={(updates) => {
+                // Handle profile updates if needed
+                console.log("Profile updated:", updates);
+              }}
+            />
           </>
         );
 

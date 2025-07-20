@@ -10,6 +10,7 @@ import { BuildingList } from "@/components/ui/building-list";
 import { AddBuildingForm } from "@/components/ui/add-building-form";
 import { UserCard } from "@/components/ui/user-card";
 import { UserManagement } from "@/components/ui/user-management";
+import { ProfileManager } from "@/components/ui/profile-manager";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -237,12 +238,17 @@ export default function SuperAdminDashboard({
         return "All Users";
       case "analytics":
         return "Analytics";
+      case "profile":
+        return "Profile";
       default:
         return "Dashboard";
     }
   };
 
   const renderContent = () => {
+    console.log("SuperAdminDashboard - Current activeView:", activeView);
+    console.log("SuperAdminDashboard - Current user:", currentUser);
+
     switch (activeView) {
       case "overview":
         return (
@@ -381,6 +387,23 @@ export default function SuperAdminDashboard({
               description="System-wide analytics"
             />
             <StatsGrid stats={statsAnalytics} />
+          </>
+        );
+
+      case "profile":
+        return (
+          <>
+            <DashboardHeader
+              title="Profile"
+              description="Manage your account information and settings"
+            />
+            <ProfileManager
+              user={currentUser}
+              onUpdate={(updates) => {
+                // Handle profile updates if needed
+                console.log("Profile updated:", updates);
+              }}
+            />
           </>
         );
 

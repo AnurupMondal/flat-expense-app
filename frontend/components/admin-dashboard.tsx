@@ -9,6 +9,7 @@ import { ApprovalList } from "@/components/ui/approval-list";
 import { ComplaintManagement } from "@/components/ui/complaint-management";
 import { UserCard } from "@/components/ui/user-card";
 import { UserManagement } from "@/components/ui/user-management";
+import { ProfileManager } from "@/components/ui/profile-manager";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { usersApi } from "@/lib/api";
@@ -238,6 +239,8 @@ export default function AdminDashboard({
         return "User Management";
       case "complaints":
         return "Complaint Management";
+      case "profile":
+        return "Profile";
       default:
         return "Dashboard";
     }
@@ -305,6 +308,23 @@ export default function AdminDashboard({
               users={users}
               onUpdateComplaint={handleUpdateComplaint}
               currentUser={currentUser}
+            />
+          </>
+        );
+
+      case "profile":
+        return (
+          <>
+            <DashboardHeader
+              title="Profile"
+              description="Manage your account information and settings"
+            />
+            <ProfileManager
+              user={currentUser}
+              onUpdate={(updates) => {
+                // Handle profile updates if needed
+                console.log("Profile updated:", updates);
+              }}
             />
           </>
         );

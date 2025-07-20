@@ -46,29 +46,36 @@ export default function FlatExpenseApp() {
 
         console.log("Loading initial data...");
 
-        // Check for existing session
-        const savedUser = localStorage.getItem("currentUser");
-        if (savedUser) {
-          const userData = JSON.parse(savedUser);
-          const user = await usersApi.getById(userData.id);
-          if (user && user.status === "approved") {
-            // Normalize user data to handle API inconsistencies
-            const normalizedUser = normalizeUser(user);
-            setCurrentUser(normalizedUser);
-            console.log("Restored user session:", normalizedUser);
+        // Check for existing JWT token instead of user data
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            // Try to get current user from server using the token
+            const currentUserData = await authApi.getCurrentUserFromServer();
+            if (currentUserData && currentUserData.status === "approved") {
+              // Normalize user data from server
+              const normalizedUser = normalizeUser(currentUserData);
+              setCurrentUser(normalizedUser);
+              console.log("Restored user session from server:", normalizedUser);
 
-            // Check if profile is complete for restored session
-            const profileCheck = checkProfileCompletion(normalizedUser);
-            console.log("Profile check on restore:", profileCheck);
-            if (!profileCheck.isComplete) {
-              console.log(
-                "Restored user has incomplete profile:",
-                profileCheck.missingFields
-              );
-              setShowProfileCompletion(true);
+              // Check if profile is complete for restored session
+              const profileCheck = checkProfileCompletion(normalizedUser);
+              console.log("Profile check on restore:", profileCheck);
+              if (!profileCheck.isComplete) {
+                console.log(
+                  "Restored user has incomplete profile:",
+                  profileCheck.missingFields
+                );
+                setShowProfileCompletion(true);
+              }
+            } else {
+              // Invalid token or user not approved
+              localStorage.removeItem("token");
             }
-          } else {
-            localStorage.removeItem("currentUser");
+          } catch (error) {
+            console.error("Failed to restore session:", error);
+            // Token might be expired or invalid
+            localStorage.removeItem("token");
           }
         }
 
@@ -160,6 +167,9 @@ export default function FlatExpenseApp() {
       // Normalize user data to handle API inconsistencies
       const normalizedUser = normalizeUser(user);
       setCurrentUser(normalizedUser);
+
+      // Note: JWT token is already saved by authApi.login
+      // No need to save user data to localStorage - we get it from server
 
       // Check if profile is complete
       const profileCheck = checkProfileCompletion(normalizedUser);
@@ -262,7 +272,8 @@ export default function FlatExpenseApp() {
     setCurrentUser(null);
     setNotifications([]);
     setShowProfileCompletion(false);
-    localStorage.removeItem("currentUser");
+    // Only remove the token - user data comes from server
+    localStorage.removeItem("token");
   };
 
   const handleProfileComplete = async (updatedUser: User) => {
@@ -275,8 +286,8 @@ export default function FlatExpenseApp() {
       prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
     );
 
-    // Save updated user to localStorage
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    // No need to save to localStorage - user data comes from server
+    // The profile update API call already updated the database
 
     // Load user notifications now that profile is complete
     try {
@@ -299,7 +310,7 @@ export default function FlatExpenseApp() {
       );
       if (updatedCurrentUser) {
         setCurrentUser(updatedCurrentUser);
-        localStorage.setItem("currentUser", JSON.stringify(updatedCurrentUser));
+        // No need to save to localStorage - user data comes from server
       }
     }
   };
@@ -328,7 +339,7 @@ export default function FlatExpenseApp() {
     if (currentUser) {
       const updated = { ...currentUser, ...updates };
       setCurrentUser(updated);
-      localStorage.setItem("currentUser", JSON.stringify(updated));
+      // No need to save to localStorage - user data comes from server
       // also update users list
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     }

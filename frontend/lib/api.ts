@@ -106,6 +106,11 @@ export const authApi = {
     }
     return null;
   },
+
+  async getCurrentUserFromServer(): Promise<User | null> {
+    const result = await apiCall<{ user: User }>("/auth/me");
+    return result.success ? result.data!.user : null;
+  },
 };
 
 // Users API

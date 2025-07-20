@@ -271,6 +271,64 @@ router.post("/logout", async (req, res) => {
   }
 });
 
+// Get current user
+router.get("/me", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        error: "Authorization header required",
+      });
+    }
+
+    const token = authHeader.substring(7);
+
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+
+    // Get user from database
+    const query = `
+      SELECT id, email, name, role, phone, building_id, flat_number, status
+      FROM users 
+      WHERE id = $1 AND status = 'approved'
+    `;
+    const result = await pool.query(query, [decoded.userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found or not approved",
+      });
+    }
+
+    const user = result.rows[0];
+
+    return res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          phone: user.phone,
+          buildingId: user.building_id,
+          flatNumber: user.flat_number,
+          status: user.status,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get current user error:", error);
+    return res.status(401).json({
+      success: false,
+      error: "Invalid or expired token",
+    });
+  }
+});
+
 // Refresh token
 router.post("/refresh", async (req, res) => {
   try {
