@@ -332,7 +332,9 @@ export default function AdminDashboard({
       default:
         return (
           <div className="text-center py-12">
-            <p className="text-gray-500">Select an option from the sidebar</p>
+            <p className="text-muted-foreground">
+              Select an option from the sidebar
+            </p>
           </div>
         );
     }

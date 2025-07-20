@@ -14,7 +14,8 @@ export function checkProfileCompletion(user: User): ProfileCompletionResult {
   const basicFields = [
     { key: "name", label: "Full Name" },
     { key: "email", label: "Email" },
-    { key: "phone", label: "Phone Number" },
+    // Make phone optional for now since demo users might not have it consistently
+    // { key: "phone", label: "Phone Number" },
   ];
 
   // Role-specific required fields

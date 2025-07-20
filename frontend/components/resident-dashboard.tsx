@@ -166,22 +166,22 @@ export default function ResidentDashboard({
     switch (activeView) {
       case "overview":
         return (
-          <>
+          <div className="space-y-6">
             <DashboardHeader
               title={`Welcome, ${currentUser.name}`}
               description={`Flat ${currentUser.flatNumber}, ${currentBuilding?.name}`}
             />
 
             {!currentUser.rentEnabled && !currentUser.maintenanceEnabled && (
-              <Card className="border-orange-200 bg-orange-50 mb-6">
+              <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                    <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-orange-900">
+                      <p className="font-medium text-orange-900 dark:text-orange-100">
                         No billing services enabled
                       </p>
-                      <p className="text-sm text-orange-700">
+                      <p className="text-sm text-orange-700 dark:text-orange-200">
                         Contact your building admin to enable rent and/or
                         maintenance billing
                       </p>
@@ -193,8 +193,8 @@ export default function ResidentDashboard({
 
             {/* Show pending bills */}
             {pendingBills.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
                   Pending Bills ({pendingBills.length})
                 </h3>
                 <div className="grid gap-4">
@@ -205,7 +205,7 @@ export default function ResidentDashboard({
                 {pendingBills.length > 2 && (
                   <Button
                     variant="outline"
-                    className="mt-4 bg-transparent"
+                    className="mt-4"
                     onClick={() => setActiveView("bills")}
                   >
                     View All Bills ({pendingBills.length})
@@ -216,8 +216,8 @@ export default function ResidentDashboard({
 
             {/* Show recent complaints */}
             {userComplaints.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
                   Recent Complaints
                 </h3>
                 <div className="space-y-4">
@@ -232,7 +232,7 @@ export default function ResidentDashboard({
                 {userComplaints.length > 2 && (
                   <Button
                     variant="outline"
-                    className="mt-4 bg-transparent"
+                    className="mt-4"
                     onClick={() => setActiveView("complaints")}
                   >
                     View All Complaints ({userComplaints.length})
@@ -242,24 +242,24 @@ export default function ResidentDashboard({
             )}
 
             <QuickActions actions={quickActions} />
-          </>
+          </div>
         );
 
       case "bills":
         return (
-          <>
+          <div className="space-y-6">
             <DashboardHeader
               title="Current Bills"
               description="View and pay your current bills"
             />
             {userBills.length === 0 ? (
-              <Card className="border-0 shadow-sm bg-white">
+              <Card>
                 <CardContent className="p-12 text-center">
-                  <Receipt className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     No Bills Available
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     You don't have any bills at the moment.
                   </p>
                 </CardContent>
@@ -271,12 +271,12 @@ export default function ResidentDashboard({
                 ))}
               </div>
             )}
-          </>
+          </div>
         );
 
       case "complaints":
         return (
-          <>
+          <div className="space-y-6">
             <DashboardHeader
               title="My Complaints"
               description="Track your submitted complaints"
@@ -291,13 +291,13 @@ export default function ResidentDashboard({
             </DashboardHeader>
 
             {userComplaints.length === 0 ? (
-              <Card className="border-0 shadow-sm bg-white">
+              <Card>
                 <CardContent className="p-12 text-center">
-                  <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     No complaints submitted yet
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     Have an issue in your building? Submit a complaint and track
                     its progress.
                   </p>
@@ -320,12 +320,12 @@ export default function ResidentDashboard({
                 ))}
               </div>
             )}
-          </>
+          </div>
         );
 
       case "submit-complaint":
         return (
-          <>
+          <div className="space-y-6">
             <DashboardHeader
               title="Submit New Complaint"
               description="Report an issue in your building"
@@ -333,7 +333,6 @@ export default function ResidentDashboard({
               <Button
                 variant="outline"
                 onClick={() => setActiveView("complaints")}
-                className="bg-transparent"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Complaints
@@ -345,20 +344,22 @@ export default function ResidentDashboard({
               onCancel={() => setActiveView("complaints")}
               isLoading={isSubmittingComplaint}
             />
-          </>
+          </div>
         );
 
       case "notifications":
         return (
-          <>
+          <div className="space-y-6">
             <DashboardHeader
               title="Notifications"
               description="Stay updated with important announcements"
             />
             {notifications.length === 0 ? (
-              <Card className="border-0 shadow-sm bg-white">
+              <Card>
                 <CardContent className="p-12 text-center">
-                  <p className="text-gray-500">No notifications available</p>
+                  <p className="text-muted-foreground">
+                    No notifications available
+                  </p>
                 </CardContent>
               </Card>
             ) : (
@@ -371,12 +372,12 @@ export default function ResidentDashboard({
                 ))}
               </div>
             )}
-          </>
+          </div>
         );
 
       case "building-info":
         return (
-          <>
+          <div className="space-y-6">
             <DashboardHeader
               title="Building Information"
               description="Complete details about your building and amenities"
@@ -388,12 +389,12 @@ export default function ResidentDashboard({
                 residents={buildingResidents}
               />
             )}
-          </>
+          </div>
         );
 
       case "profile":
         return (
-          <>
+          <div className="space-y-6">
             <DashboardHeader
               title="Profile"
               description="Manage your account information and settings"
@@ -405,13 +406,15 @@ export default function ResidentDashboard({
                 console.log("Profile updated:", updates);
               }}
             />
-          </>
+          </div>
         );
 
       default:
         return (
           <div className="text-center py-12">
-            <p className="text-gray-500">Select an option from the sidebar</p>
+            <p className="text-muted-foreground">
+              Select an option from the sidebar
+            </p>
           </div>
         );
     }

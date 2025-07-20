@@ -109,7 +109,7 @@ export function ComplaintForm({
   };
 
   return (
-    <Card className="border-0 shadow-sm bg-white">
+    <Card className="border-0 shadow-sm bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-orange-600" />
@@ -156,7 +156,7 @@ export function ComplaintForm({
                     <SelectItem key={priority.value} value={priority.value}>
                       <div>
                         <div className="font-medium">{priority.label}</div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           {priority.description}
                         </div>
                       </div>
@@ -182,19 +182,19 @@ export function ComplaintForm({
               rows={4}
               className="resize-none"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {formData.description.length}/500 characters (minimum 10 required)
             </p>
           </div>
 
           <div className="space-y-2">
             <Label>Attachments (Optional)</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-              <p className="text-sm text-gray-600">
+            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
                 Drag and drop files here or click to browse
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Supported: JPG, PNG, PDF (Max 5MB each)
               </p>
             </div>

@@ -168,41 +168,56 @@ export default function AuthPage({
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100 animate-fade-in">
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
-            <Building2 className="w-8 h-8 text-white" />
+        <div className="text-center space-y-4 animate-fade-in">
+          <div className="w-20 h-20 gradient-primary rounded-3xl flex items-center justify-center mx-auto shadow-elevated hover-lift">
+            <Building2 className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">FlatManager Pro</h1>
-          <p className="text-gray-600">Smart Expense & Complaint Management</p>
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              FlatManager Pro
+            </h1>
+            <p className="text-muted-foreground font-medium">
+              Smart Expense & Complaint Management
+            </p>
+          </div>
         </div>
 
         {/* Demo Credentials */}
-        <Card className="border-0 shadow-lg bg-blue-50/50 backdrop-blur-sm">
+        <Card className="border-0 shadow-card bg-card/60 backdrop-blur-md hover-lift rounded-card">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-blue-900">
+            <CardTitle className="text-sm text-primary font-semibold">
               Demo Credentials
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             {demoCredentials.map((cred, index) => (
-              <div key={index} className="text-xs space-y-1">
-                <p className="font-medium text-blue-800">{cred.role}:</p>
-                <p className="text-blue-700">Email: {cred.email}</p>
-                <p className="text-blue-700">Password: {cred.password}</p>
+              <div
+                key={index}
+                className="text-xs space-y-1 p-2 rounded-lg bg-muted/30"
+              >
+                <p className="font-semibold text-primary">{cred.role}:</p>
+                <p className="text-muted-foreground">Email: {cred.email}</p>
+                <p className="text-muted-foreground">
+                  Password: {cred.password}
+                </p>
               </div>
             ))}
           </CardContent>
         </Card>
 
         {/* Auth Form */}
-        <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+        <Card className="border-0 shadow-elevated bg-card/80 backdrop-blur-md hover-lift rounded-card">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+              <TabsTrigger value="login" className="font-medium">
+                Login
+              </TabsTrigger>
+              <TabsTrigger value="register" className="font-medium">
+                Register
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -455,15 +470,15 @@ export default function AuthPage({
                     <Alert
                       className={
                         message.type === "error"
-                          ? "border-red-200 bg-red-50"
-                          : "border-green-200 bg-green-50"
+                          ? "border-destructive/30 bg-destructive/10"
+                          : "border-success/30 bg-success/10"
                       }
                     >
                       <AlertDescription
                         className={
                           message.type === "error"
-                            ? "text-red-700"
-                            : "text-green-700"
+                            ? "text-destructive"
+                            : "text-success"
                         }
                       >
                         {message.text}

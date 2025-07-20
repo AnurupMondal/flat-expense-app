@@ -158,9 +158,9 @@ export function UserManagement({
     } as const;
 
     const colors = {
-      approved: "text-green-700 bg-green-100",
-      pending: "text-yellow-700 bg-yellow-100",
-      rejected: "text-red-700 bg-red-100",
+      approved: "text-success bg-success/20",
+      pending: "text-warning bg-warning/20",
+      rejected: "text-destructive bg-destructive/20",
     };
 
     return (
@@ -200,7 +200,7 @@ export function UserManagement({
                 <Users className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Users</p>
+                <p className="text-sm text-muted-foreground">Total Users</p>
                 <p className="text-2xl lg:text-3xl font-bold">{users.length}</p>
               </div>
             </div>
@@ -210,11 +210,13 @@ export function UserManagement({
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 lg:p-5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-yellow-100 rounded-lg">
-                <Clock className="w-5 h-5 text-yellow-600" />
+              <div className="p-2.5 bg-warning/20 rounded-lg">
+                <Clock className="w-5 h-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Pending Approval</p>
+                <p className="text-sm text-muted-foreground">
+                  Pending Approval
+                </p>
                 <p className="text-2xl lg:text-3xl font-bold">
                   {pendingUsers.length}
                 </p>
@@ -226,11 +228,11 @@ export function UserManagement({
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 lg:p-5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-green-100 rounded-lg">
-                <Check className="w-5 h-5 text-green-600" />
+              <div className="p-2.5 bg-success/20 rounded-lg">
+                <Check className="w-5 h-5 text-success" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Approved</p>
+                <p className="text-sm text-muted-foreground">Approved</p>
                 <p className="text-2xl lg:text-3xl font-bold">
                   {users.filter((u) => u.status === "approved").length}
                 </p>
@@ -242,11 +244,11 @@ export function UserManagement({
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 lg:p-5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-orange-100 rounded-lg">
-                <Shield className="w-5 h-5 text-orange-600" />
+              <div className="p-2.5 bg-primary/20 rounded-lg">
+                <Shield className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Admins</p>
+                <p className="text-sm text-muted-foreground">Admins</p>
                 <p className="text-2xl lg:text-3xl font-bold">
                   {users.filter((u) => u.role !== "resident").length}
                 </p>
@@ -271,7 +273,7 @@ export function UserManagement({
                 Search Users
               </Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="search"
                   placeholder="Search by name, email, or flat..."
@@ -358,11 +360,11 @@ export function UserManagement({
           {filteredUsers.length === 0 ? (
             <Card className="border-0 shadow-sm">
               <CardContent className="p-12 text-center">
-                <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   No users found
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Try adjusting your filters or search criteria.
                 </p>
               </CardContent>
@@ -386,14 +388,14 @@ export function UserManagement({
 
                         <div className="flex-1 min-w-0 space-y-2">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-gray-900 truncate text-base lg:text-lg">
+                            <h3 className="font-semibold text-foreground truncate text-base lg:text-lg">
                               {user.name}
                             </h3>
                             {getStatusBadge(user.status)}
                             {getRoleBadge(user.role)}
                           </div>
 
-                          <div className="flex flex-wrap gap-4 lg:gap-6 text-sm text-gray-600">
+                          <div className="flex flex-wrap gap-4 lg:gap-6 text-sm text-muted-foreground">
                             <div className="flex items-center gap-2">
                               <Mail className="w-4 h-4 flex-shrink-0" />
                               <span className="truncate">{user.email}</span>
@@ -425,7 +427,9 @@ export function UserManagement({
                           {user.role === "resident" && (
                             <div className="flex gap-4 mt-3 text-sm">
                               <div className="flex items-center gap-2">
-                                <span className="text-gray-600">Rent:</span>
+                                <span className="text-muted-foreground">
+                                  Rent:
+                                </span>
                                 <Badge
                                   variant={
                                     user.rentEnabled ? "default" : "secondary"
@@ -436,7 +440,7 @@ export function UserManagement({
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-gray-600">
+                                <span className="text-muted-foreground">
                                   Maintenance:
                                 </span>
                                 <Badge
@@ -464,7 +468,7 @@ export function UserManagement({
                               size="sm"
                               variant="outline"
                               onClick={() => onRejectUser(user.id)}
-                              className="text-red-600 border-red-200 hover:bg-red-50 gap-1"
+                              className="text-destructive border-destructive/20 hover:bg-destructive/10 gap-1"
                             >
                               <X className="w-4 h-4" />
                               <span className="hidden sm:inline">Reject</span>
@@ -472,7 +476,7 @@ export function UserManagement({
                             <Button
                               size="sm"
                               onClick={() => onApproveUser(user.id)}
-                              className="bg-green-600 hover:bg-green-700 gap-1"
+                              className="bg-success hover:bg-success/90 gap-1"
                             >
                               <Check className="w-4 h-4" />
                               <span className="hidden sm:inline">Approve</span>
@@ -524,26 +528,26 @@ export function UserManagement({
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                   <div className="form-group">
-                                    <Label className="text-sm font-medium text-gray-700">
+                                    <Label className="text-sm font-medium text-muted-foreground">
                                       Email
                                     </Label>
-                                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                                    <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">
                                       {selectedUser.email}
                                     </p>
                                   </div>
                                   <div className="form-group">
-                                    <Label className="text-sm font-medium text-gray-700">
+                                    <Label className="text-sm font-medium text-muted-foreground">
                                       Phone
                                     </Label>
-                                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                                    <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">
                                       {selectedUser.phone}
                                     </p>
                                   </div>
                                   <div className="form-group">
-                                    <Label className="text-sm font-medium text-gray-700">
+                                    <Label className="text-sm font-medium text-muted-foreground">
                                       Building
                                     </Label>
-                                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                                    <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">
                                       {selectedUser.buildingId
                                         ? buildings.find(
                                             (b) =>
@@ -553,29 +557,29 @@ export function UserManagement({
                                     </p>
                                   </div>
                                   <div className="form-group">
-                                    <Label className="text-sm font-medium text-gray-700">
+                                    <Label className="text-sm font-medium text-muted-foreground">
                                       Flat Number
                                     </Label>
-                                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                                    <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">
                                       {selectedUser.flatNumber ||
                                         "Not assigned"}
                                     </p>
                                   </div>
                                   <div className="form-group">
-                                    <Label className="text-sm font-medium text-gray-700">
+                                    <Label className="text-sm font-medium text-muted-foreground">
                                       Registration Date
                                     </Label>
-                                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                                    <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">
                                       {new Date(
                                         selectedUser.createdAt
                                       ).toLocaleDateString()}
                                     </p>
                                   </div>
                                   <div className="form-group">
-                                    <Label className="text-sm font-medium text-gray-700">
+                                    <Label className="text-sm font-medium text-muted-foreground">
                                       Approved By
                                     </Label>
-                                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                                    <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">
                                       {selectedUser.approvedBy
                                         ? users.find(
                                             (u) =>
@@ -588,12 +592,12 @@ export function UserManagement({
 
                                 {selectedUser.role === "resident" && (
                                   <div className="space-y-3 pt-4 border-t">
-                                    <Label className="text-sm font-medium text-gray-700">
+                                    <Label className="text-sm font-medium text-muted-foreground">
                                       Billing Services
                                     </Label>
                                     <div className="flex gap-6">
                                       <div className="flex items-center gap-3">
-                                        <span className="text-sm text-gray-600">
+                                        <span className="text-sm text-muted-foreground">
                                           Rent Billing:
                                         </span>
                                         <Badge
@@ -610,7 +614,7 @@ export function UserManagement({
                                         </Badge>
                                       </div>
                                       <div className="flex items-center gap-3">
-                                        <span className="text-sm text-gray-600">
+                                        <span className="text-sm text-muted-foreground">
                                           Maintenance Billing:
                                         </span>
                                         <Badge
@@ -776,7 +780,7 @@ export function UserManagement({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                  className="text-destructive border-destructive/20 hover:bg-destructive/10"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -816,11 +820,11 @@ export function UserManagement({
           {pendingUsers.length === 0 ? (
             <Card className="border-0 shadow-sm">
               <CardContent className="p-12 text-center">
-                <Clock className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <Clock className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   No pending approvals
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   All user registrations have been processed.
                 </p>
               </CardContent>
@@ -842,15 +846,15 @@ export function UserManagement({
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-foreground">
                               {user.name}
                             </h3>
                             {getRoleBadge(user.role)}
-                            <Badge className="text-yellow-700 bg-yellow-100">
+                            <Badge className="text-warning-foreground bg-warning/20">
                               Pending
                             </Badge>
                           </div>
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                             <span>{user.email}</span>
                             <span>{user.phone}</span>
                             {user.buildingId && (
@@ -866,7 +870,7 @@ export function UserManagement({
                               <span>Flat {user.flatNumber}</span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Registered on{" "}
                             {new Date(user.createdAt).toLocaleDateString()}
                           </p>
@@ -877,7 +881,7 @@ export function UserManagement({
                           size="sm"
                           variant="outline"
                           onClick={() => onRejectUser(user.id)}
-                          className="text-red-600 border-red-200 hover:bg-red-50"
+                          className="text-destructive border-destructive/20 hover:bg-destructive/10"
                         >
                           <X className="w-4 h-4 mr-1" />
                           Reject
@@ -885,7 +889,7 @@ export function UserManagement({
                         <Button
                           size="sm"
                           onClick={() => onApproveUser(user.id)}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-success hover:bg-success/90"
                         >
                           <Check className="w-4 h-4 mr-1" />
                           Approve

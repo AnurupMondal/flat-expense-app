@@ -30,7 +30,6 @@ interface AppSidebarProps {
   pendingCount?: number;
   notificationCount?: number;
   isHorizontal?: boolean;
-  collapsed?: boolean;
 }
 
 export default function AppSidebar({
@@ -41,7 +40,6 @@ export default function AppSidebar({
   pendingCount = 0,
   notificationCount = 0,
   isHorizontal = false,
-  collapsed = false,
 }: AppSidebarProps) {
   const getSidebarItems = () => {
     switch (currentUser.role) {
@@ -162,34 +160,30 @@ export default function AppSidebar({
   const sidebarItems = getSidebarItems();
 
   return (
-    <div className="h-screen flex flex-col bg-sidebar-background text-sidebar-foreground">
+    <div className="h-full flex flex-col bg-sidebar-background text-sidebar-foreground">
       {/* Header */}
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4 flex-shrink-0">
+      <div className="flex h-16 items-center border-b border-sidebar-border px-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Building2 className="h-4 w-4" />
           </div>
-          {!collapsed && (
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">Flat Expense</span>
-              <span className="truncate text-xs text-muted-foreground">
-                Management
-              </span>
-            </div>
-          )}
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">Flat Expense</span>
+            <span className="truncate text-xs text-muted-foreground">
+              Management
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto py-4 min-h-0">
+      <div className="flex-1 overflow-y-auto py-4">
         {sidebarItems.map((group, groupIndex) => (
           <div key={groupIndex} className="mb-6 last:mb-2">
-            {!collapsed && (
-              <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {group.title}
-              </div>
-            )}
-            <div className={`space-y-1 ${collapsed ? "px-1" : "px-2"}`}>
+            <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              {group.title}
+            </div>
+            <div className="space-y-1 px-2">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeView === item.id;
@@ -199,32 +193,23 @@ export default function AppSidebar({
                     key={item.id}
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full text-left font-normal",
-                      collapsed ? "justify-center px-2" : "justify-start gap-3",
+                      "w-full justify-start gap-3 text-left font-normal",
                       isActive &&
                         "bg-secondary text-secondary-foreground shadow-sm",
                       !isActive &&
                         "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                     onClick={() => onViewChange(item.id)}
-                    title={collapsed ? item.title : undefined}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && (
-                      <>
-                        <span className="truncate">{item.title}</span>
-                        {item.badge && (
-                          <Badge
-                            variant="secondary"
-                            className="ml-auto h-5 w-auto min-w-[1.25rem] text-xs"
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </>
-                    )}
-                    {collapsed && item.badge && (
-                      <div className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full"></div>
+                    <span className="truncate">{item.title}</span>
+                    {item.badge && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-auto h-5 w-auto min-w-[1.25rem] text-xs"
+                      >
+                        {item.badge}
+                      </Badge>
                     )}
                   </Button>
                 );
@@ -235,35 +220,25 @@ export default function AppSidebar({
       </div>
 
       {/* Footer */}
-      <div className="border-t border-sidebar-border p-4 flex-shrink-0">
-        <div
-          className={`flex items-center mb-3 ${
-            collapsed ? "justify-center" : "gap-3"
-          }`}
-        >
+      <div className="border-t border-sidebar-border p-4">
+        <div className="flex items-center gap-3 mb-3">
           <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
             <UserIcon className="h-4 w-4" />
           </div>
-          {!collapsed && (
-            <div className="flex-1 text-sm">
-              <div className="font-medium">{currentUser.name}</div>
-              <div className="text-xs text-muted-foreground">
-                {currentUser.email}
-              </div>
+          <div className="flex-1 text-sm">
+            <div className="font-medium">{currentUser.name}</div>
+            <div className="text-xs text-muted-foreground">
+              {currentUser.email}
             </div>
-          )}
+          </div>
         </div>
         <Button
           variant="ghost"
-          className={cn(
-            "w-full text-muted-foreground hover:text-foreground",
-            collapsed ? "justify-center px-2" : "justify-start gap-3"
-          )}
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
           onClick={onLogout}
-          title={collapsed ? "Sign out" : undefined}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && "Sign out"}
+          Sign out
         </Button>
       </div>
     </div>

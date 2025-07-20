@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { AlertTriangle, Clock, CheckCircle, User } from "lucide-react"
-import type { Complaint, User as UserType } from "@/types/app-types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AlertTriangle, Clock, CheckCircle, User } from "lucide-react";
+import type { Complaint, User as UserType } from "@/types/app-types";
 
 interface ComplaintCardProps {
-  complaint: Complaint
-  user?: UserType
-  showActions?: boolean
-  onUpdate?: (complaintId: string) => void
-  onResolve?: (complaintId: string) => void
-  className?: string
+  complaint: Complaint;
+  user?: UserType;
+  showActions?: boolean;
+  onUpdate?: (complaintId: string) => void;
+  onResolve?: (complaintId: string) => void;
+  className?: string;
 }
 
 export function ComplaintCard({
@@ -27,50 +27,50 @@ export function ComplaintCard({
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "submitted":
-        return "bg-blue-100 text-blue-700"
+        return "bg-primary/10 text-primary border-primary/20";
       case "assigned":
-        return "bg-yellow-100 text-yellow-700"
+        return "bg-secondary/10 text-secondary border-secondary/20";
       case "in-progress":
-        return "bg-orange-100 text-orange-700"
+        return "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800";
       case "resolved":
-        return "bg-green-100 text-green-700"
+        return "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800";
       default:
-        return "bg-gray-100 text-gray-700"
+        return "bg-muted text-muted-foreground border-border";
     }
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
       case "high":
-        return "bg-red-100 text-red-700"
+        return "bg-destructive/20 text-destructive border-destructive/30";
       case "medium":
-        return "bg-yellow-100 text-yellow-700"
+        return "bg-secondary/10 text-secondary border-secondary/20";
       case "low":
-        return "bg-green-100 text-green-700"
+        return "bg-success/20 text-success border-success/30";
       case "emergency":
-        return "bg-red-500 text-white animate-pulse"
+        return "bg-destructive text-destructive-foreground animate-pulse border-destructive";
       default:
-        return "bg-gray-100 text-gray-700"
+        return "bg-muted text-muted-foreground border-border";
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "submitted":
-        return <Clock className="w-4 h-4" />
+        return <Clock className="w-4 h-4" />;
       case "assigned":
-        return <User className="w-4 h-4" />
+        return <User className="w-4 h-4" />;
       case "in-progress":
-        return <AlertTriangle className="w-4 h-4" />
+        return <AlertTriangle className="w-4 h-4" />;
       case "resolved":
-        return <CheckCircle className="w-4 h-4" />
+        return <CheckCircle className="w-4 h-4" />;
       default:
-        return <AlertTriangle className="w-4 h-4" />
+        return <AlertTriangle className="w-4 h-4" />;
     }
-  }
+  };
 
   return (
-    <Card className={`border-0 shadow-sm bg-white ${className}`}>
+    <Card className={`border-0 shadow-sm bg-card ${className}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-2 flex-1 min-w-0">
@@ -78,7 +78,9 @@ export function ComplaintCard({
               <Badge variant="outline" className="font-mono text-xs">
                 {complaint.id}
               </Badge>
-              <Badge className={getPriorityColor(complaint.priority)}>{complaint.priority}</Badge>
+              <Badge className={getPriorityColor(complaint.priority)}>
+                {complaint.priority}
+              </Badge>
               <Badge className={getStatusColor(complaint.status)}>
                 <span className="flex items-center gap-1">
                   {getStatusIcon(complaint.status)}
@@ -94,7 +96,7 @@ export function ComplaintCard({
                     {user.flatNumber || user.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   {user.name} - Flat {user.flatNumber}
                 </span>
               </div>
@@ -103,20 +105,31 @@ export function ComplaintCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-gray-600">{complaint.description}</p>
+        <p className="text-sm text-foreground">{complaint.description}</p>
 
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>Created: {complaint.createdAt.toLocaleDateString()}</span>
-          {complaint.assignedTo && <span>Assigned to: {complaint.assignedTo}</span>}
+          {complaint.assignedTo && (
+            <span>Assigned to: {complaint.assignedTo}</span>
+          )}
         </div>
 
         {showActions && (
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => onUpdate?.(complaint.id)} className="flex-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onUpdate?.(complaint.id)}
+              className="flex-1"
+            >
               Update Status
             </Button>
             {complaint.status !== "resolved" && (
-              <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => onResolve?.(complaint.id)}>
+              <Button
+                size="sm"
+                className="bg-success hover:bg-success/90"
+                onClick={() => onResolve?.(complaint.id)}
+              >
                 <CheckCircle className="w-4 h-4 mr-1" />
                 Resolve
               </Button>
@@ -126,27 +139,35 @@ export function ComplaintCard({
 
         {complaint.updates.length > 0 && (
           <div className="space-y-2 pt-2 border-t">
-            <p className="text-sm font-medium text-gray-700">Latest Update:</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Latest Update:
+            </p>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge
-                    className={getStatusColor(complaint.updates[complaint.updates.length - 1].status)}
+                    className={getStatusColor(
+                      complaint.updates[complaint.updates.length - 1].status
+                    )}
                     variant="outline"
                   >
                     {complaint.updates[complaint.updates.length - 1].status}
                   </Badge>
-                  <span className="text-xs text-gray-500">
-                    {complaint.updates[complaint.updates.length - 1].updatedAt.toLocaleDateString()}
+                  <span className="text-xs text-muted-foreground">
+                    {complaint.updates[
+                      complaint.updates.length - 1
+                    ].updatedAt.toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{complaint.updates[complaint.updates.length - 1].note}</p>
+                <p className="text-sm text-foreground mt-1">
+                  {complaint.updates[complaint.updates.length - 1].note}
+                </p>
               </div>
             </div>
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

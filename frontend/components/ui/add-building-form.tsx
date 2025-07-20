@@ -35,7 +35,7 @@ export function AddBuildingForm({ onAdd, onCancel }: AddBuildingFormProps) {
   }
 
   return (
-    <Card className="border-0 shadow-sm bg-white">
+    <Card className="hover-lift">
       <CardHeader>
         <CardTitle className="text-lg">Add New Building</CardTitle>
       </CardHeader>

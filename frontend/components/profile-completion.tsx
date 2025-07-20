@@ -152,16 +152,16 @@ export default function ProfileCompletion({
           <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
             <UserCheck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Complete Your Profile
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Please complete your profile information to access the platform
           </p>
         </div>
 
         {/* Progress Card */}
-        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -182,9 +182,9 @@ export default function ProfileCompletion({
             <Progress value={completionPercentage} className="h-2" />
 
             {profileCheck.missingFields.length > 0 && (
-              <Alert className="border-orange-200 bg-orange-50">
+              <Alert className="border-warning/30 bg-warning/10">
                 <AlertTriangle className="w-4 h-4" />
-                <AlertDescription className="text-orange-700">
+                <AlertDescription className="text-warning-foreground">
                   Missing fields: {profileCheck.missingFields.join(", ")}
                 </AlertDescription>
               </Alert>
@@ -193,7 +193,7 @@ export default function ProfileCompletion({
         </Card>
 
         {/* Profile Form */}
-        <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+        <Card className="border-0 shadow-xl bg-card/90 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
             <CardDescription>Update your profile details</CardDescription>
@@ -278,7 +278,7 @@ export default function ProfileCompletion({
                     required={user.role === "resident"}
                   />
                   {selectedBuilding && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Building: {selectedBuilding.name} (
                       {selectedBuilding.totalUnits} units)
                     </p>

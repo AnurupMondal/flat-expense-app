@@ -160,7 +160,7 @@ export function ProfileManager({ user, onUpdate }: ProfileManagerProps) {
             id="email"
             value={user.email}
             disabled
-            className="mt-1 bg-gray-50"
+            className="mt-1 bg-muted"
           />
         </div>
 
@@ -215,7 +215,7 @@ export function ProfileManager({ user, onUpdate }: ProfileManagerProps) {
             id="role"
             value={user.role}
             disabled
-            className="mt-1 bg-gray-50 capitalize"
+            className="mt-1 bg-muted capitalize"
           />
         </div>
       </CardContent>

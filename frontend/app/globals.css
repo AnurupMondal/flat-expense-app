@@ -1,14 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* Modern glass morphism effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: var(--blur-backdrop);
+    -webkit-backdrop-filter: var(--blur-backdrop);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: var(--blur-backdrop);
+    -webkit-backdrop-filter: var(--blur-backdrop);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  
+  /* Modern gradients */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-surface {
+    background: var(--gradient-surface);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  /* Modern shadows */
+  .shadow-modern {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-xl);
+  }
+  
+  /* Hover effects */
+  .hover-lift {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .hover-scale {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+  
+  /* Modern border radius */
+  .rounded-modern {
+    border-radius: 12px;
+  }
+  
+  .rounded-card {
+    border-radius: 16px;
   }
   
   /* Custom spacing utilities for consistent UI */
@@ -61,73 +134,141 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Light theme - Professional and accessible design */
+    --background: 217 25% 97%;        /* #F7F9FB - off-white, ultra light gray */
+    --foreground: 210 15% 12%;        /* #182027 - near-black for high legibility */
+    --card: 0 0% 100%;                /* #FFFFFF - white cards with subtle shadow */
+    --card-foreground: 210 15% 12%;   /* #182027 - dark text on cards */
+    --popover: 0 0% 100%;             /* #FFFFFF */
+    --popover-foreground: 210 15% 12%; /* #182027 */
+    
+    --primary: 215 69% 45%;           /* #2262C6 - mid-tone blue for trust/reliability */
+    --primary-foreground: 0 0% 100%;  /* White text on primary */
+    
+    --secondary: 168 51% 36%;         /* #429984 - fresh teal/green, positive/modern */
+    --secondary-foreground: 0 0% 100%; /* White text on secondary */
+    
+    --muted: 216 12% 92%;            /* Light muted background */
+    --muted-foreground: 210 9% 41%;   /* #606973 - slate gray for labels/hints */
+    
+    --accent: 215 69% 45%;           /* Same as primary */
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 3 82% 57%;        /* #E53935 - rich red for errors/alerts */
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 123 43% 45%;          /* #43A047 - vibrant green for success */
+    --success-foreground: 0 0% 100%;
+    
+    --info: 217 75% 44%;             /* #1565C0 - darker blue for informational notes */
+    --info-foreground: 0 0% 100%;
+    
+    --border: 215 16% 90%;           /* #E0E4EA - soft gray, unobtrusive borders */
+    --input: 216 12% 92%;            /* Light input backgrounds */
+    --ring: 215 69% 45%;             /* Focus ring - primary blue */
+    
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 100%;  /* White sidebar */
+    --sidebar-foreground: 210 15% 12%; /* Dark text */
+    --sidebar-primary: 215 69% 45%;   /* Primary blue */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 216 12% 96%;    /* Light accent */
+    --sidebar-accent-foreground: 210 15% 12%;
+    --sidebar-border: 215 16% 90%;    /* Soft borders */
+    --sidebar-ring: 215 69% 45%;
+    
+    /* Chart colors - professional palette */
+    --chart-1: 215 69% 45%;  /* Primary blue */
+    --chart-2: 168 51% 36%;  /* Teal/green */
+    --chart-3: 217 75% 44%;  /* Info blue */
+    --chart-4: 123 43% 45%;  /* Success green */
+    --chart-5: 3 82% 57%;    /* Error red */
+    
+    --radius: 0.75rem;
+    
+    /* Enhanced gradients for better visual hierarchy */
+    --gradient-primary: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(262, 83%, 48%) 100%);
+    --gradient-surface: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, hsl(240, 4.8%, 97%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(252, 83%, 58%) 100%);
+    
+    /* Enhanced shadows for depth */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.12), 0 1px 2px -1px rgb(0 0 0 / 0.12);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.15);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.15), 0 4px 6px -4px rgb(0 0 0 / 0.15);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.3);
+    
+    /* Blur effects */
+    --blur-backdrop: blur(12px);
+  }
+  
+  .dark {
+    /* Refined Black Theme - Luxurious and sophisticated */
+    --background: 217 20% 7%;          /* #121316 - Deep black with hint of purple/blue */
+    --foreground: 222 25% 97%;         /* #F4F5FB - Vintage white, highly legible */
+    --card: 216 15% 10%;               /* #1A1C1F - Slightly lighter black for surfaces */
+    --card-foreground: 222 25% 97%;    /* #F4F5FB - Vintage white text on cards */
+    --popover: 216 15% 10%;            /* #1A1C1F */
+    --popover-foreground: 222 25% 97%; /* #F4F5FB */
+    
+    --primary: 206 82% 67%;            /* #63B3ED - Soft, icy blue for highlights */
+    --primary-foreground: 222 25% 97%; /* Vintage white text on primary */
+    
+    --secondary: 150 61% 61%;          /* #5DE1A3 - Refined aqua green */
+    --secondary-foreground: 217 20% 7%; /* Deep black text on secondary */
+    
+    --muted: 216 15% 13%;             /* #23262B - Ultra-dark gray for surfaces */
+    --muted-foreground: 218 8% 69%;   /* #B0B2B8 - Subtle gray for hints */
+    
+    --accent: 206 82% 67%;            /* Same as primary - soft icy blue */
+    --accent-foreground: 222 25% 97%;
+    
+    --destructive: 356 100% 68%;      /* #FF5F6D - Lively coral red */
+    --destructive-foreground: 222 25% 97%;
+    
+    --success: 150 67% 47%;           /* #25CB7B - Vibrant emerald */
+    --success-foreground: 222 25% 97%;
+    
+    --info: 206 100% 62%;             /* #40A9FF - Modern blue for notifications */
+    --info-foreground: 217 20% 7%;
+    
+    --warning: 40 100% 58%;           /* #FFAA2B - Polished amber/orange */
+    --warning-foreground: 217 20% 7%;
+    
+    --border: 216 15% 15%;            /* #23262B - Ultra-dark gray for separation */
+    --input: 216 15% 13%;             /* Slightly lighter for inputs */
+    --ring: 206 82% 67%;              /* Focus ring - soft icy blue */
+    
+    /* Refined black sidebar */
+    --sidebar-background: 217 20% 5%;  /* Even deeper black for sidebar */
+    --sidebar-foreground: 222 25% 97%; /* Vintage white text */
+    --sidebar-primary: 206 82% 67%;    /* Soft icy blue */
+    --sidebar-primary-foreground: 222 25% 97%;
+    --sidebar-accent: 216 15% 18%;     /* Accent backgrounds */
+    --sidebar-accent-foreground: 222 25% 97%;
+    --sidebar-border: 216 15% 15%;     /* Ultra-dark borders */
+    --sidebar-ring: 206 82% 67%;
+    
+    /* Refined chart colors - vibrant neon underglow quality */
+    --chart-1: 206 82% 67%;   /* Soft icy blue */
+    --chart-2: 150 61% 61%;   /* Refined aqua green */
+    --chart-3: 206 100% 62%;  /* Modern blue */
+    --chart-4: 150 67% 47%;   /* Vibrant emerald */
+    --chart-5: 356 100% 68%;  /* Lively coral red */
+    
+    /* Luxurious gradients with neon underglow */
+    --gradient-primary: linear-gradient(135deg, hsl(206, 82%, 67%) 0%, hsl(206, 82%, 57%) 100%);
+    --gradient-surface: linear-gradient(135deg, hsl(217, 20%, 7%) 0%, hsl(216, 15%, 10%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(206, 82%, 67%) 0%, hsl(150, 61%, 61%) 100%);
+    
+    /* Enhanced shadows for cinematic depth */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.6);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.7), 0 1px 2px -1px rgb(0 0 0 / 0.7);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.8), 0 2px 4px -2px rgb(0 0 0 / 0.8);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.8), 0 4px 6px -4px rgb(0 0 0 / 0.8);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.9), 0 8px 10px -6px rgb(0 0 0 / 0.9);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.9);
   }
 }
 
@@ -137,5 +278,45 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Ensure main content areas have proper background */
+  .dashboard-content {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Refined black theme enhancements */
+  .dark .hover-glow {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .dark .hover-glow:hover {
+    box-shadow: 0 0 20px hsl(206, 82%, 67% / 0.3);
+  }
+  
+  .dark .card-glass {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    background: hsl(216, 15%, 10% / 0.8);
+    border: 1px solid hsl(216, 15%, 15% / 0.5);
+  }
+  
+  .dark .focus-ring:focus-visible {
+    outline: 2px solid hsl(206, 82%, 67%);
+    outline-offset: 2px;
+  }
+  
+  .dark .neon-text {
+    text-shadow: 0 0 10px hsl(206, 82%, 67% / 0.5);
+  }
+  
+  .dark .gradient-button {
+    background: linear-gradient(135deg, hsl(206, 82%, 67%) 0%, hsl(206, 82%, 57%) 100%);
+    transition: all 0.3s ease;
+  }
+  
+  .dark .gradient-button:hover {
+    background: linear-gradient(135deg, hsl(206, 82%, 72%) 0%, hsl(206, 82%, 62%) 100%);
+    box-shadow: 0 8px 25px hsl(206, 82%, 67% / 0.4);
   }
 }
