@@ -11,6 +11,7 @@ import { AddBuildingForm } from "@/components/ui/add-building-form";
 import { UserCard } from "@/components/ui/user-card";
 import { UserManagement } from "@/components/ui/user-management";
 import { ProfileManager } from "@/components/ui/profile-manager";
+import AdminBuildingAssignments from "@/components/ui/admin-building-assignments";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -236,6 +237,8 @@ export default function SuperAdminDashboard({
         return "Building Management";
       case "users":
         return "All Users";
+      case "admin-assignments":
+        return "Admin Assignments";
       case "analytics":
         return "Analytics";
       case "profile":
@@ -321,6 +324,13 @@ export default function SuperAdminDashboard({
               onApproveUser={handleApproveUser}
               onRejectUser={handleRejectUser}
             />
+          </>
+        );
+
+      case "admin-assignments":
+        return (
+          <>
+            <AdminBuildingAssignments />
           </>
         );
 

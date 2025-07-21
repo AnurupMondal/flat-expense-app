@@ -65,6 +65,7 @@ export default function AppSidebar({
               },
               { title: "Buildings", icon: Building2, id: "buildings" },
               { title: "User Management", icon: Users, id: "users" },
+              { title: "Admin Assignments", icon: UserIcon, id: "admin-assignments" },
               { title: "System Settings", icon: Settings, id: "settings" },
             ],
           },

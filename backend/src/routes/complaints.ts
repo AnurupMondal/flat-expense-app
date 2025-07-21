@@ -35,10 +35,14 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
       paramCount++;
       query += ` AND c.user_id = $${paramCount}`;
       values.push(user.userId);
-    } else if (user.role === "admin" && user.buildingId) {
+    } else if (user.role === "admin") {
+      // For admins, filter by assigned buildings
       paramCount++;
-      query += ` AND c.building_id = $${paramCount}`;
-      values.push(user.buildingId);
+      query += ` AND c.building_id IN (
+        SELECT building_id FROM admin_building_assignments 
+        WHERE admin_id = $${paramCount} AND is_active = true
+      )`;
+      values.push(user.userId);
     }
 
     // Additional filters
@@ -191,13 +195,16 @@ router.patch(
         return;
       }
 
-      // For admins, ensure they can only update complaints in their building
+      // For admins, ensure they can only update complaints in their assigned buildings
       let whereClause = "WHERE id = $1";
       let values: any[] = [id];
 
-      if (user.role === "admin" && user.buildingId) {
-        whereClause += " AND building_id = $2";
-        values.push(user.buildingId);
+      if (user.role === "admin") {
+        whereClause += ` AND building_id IN (
+          SELECT building_id FROM admin_building_assignments 
+          WHERE admin_id = $2 AND is_active = true
+        )`;
+        values.push(user.userId);
       }
 
       const query = `
@@ -259,9 +266,12 @@ router.get(
       if (user.role === "resident") {
         whereClause += " AND c.user_id = $2";
         values.push(user.userId);
-      } else if (user.role === "admin" && user.buildingId) {
-        whereClause += " AND c.building_id = $2";
-        values.push(user.buildingId);
+      } else if (user.role === "admin") {
+        whereClause += ` AND c.building_id IN (
+          SELECT building_id FROM admin_building_assignments 
+          WHERE admin_id = $2 AND is_active = true
+        )`;
+        values.push(user.userId);
       }
 
       const query = `

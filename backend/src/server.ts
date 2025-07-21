@@ -22,6 +22,7 @@ import billRoutes from "./routes/bills";
 import notificationRoutes from "./routes/notifications";
 import analyticsRoutes from "./routes/analytics";
 import uploadRoutes from "./routes/upload";
+import adminAssignmentRoutes from "./routes/admin-assignments";
 
 // Load environment variables
 dotenv.config();
@@ -129,6 +130,7 @@ app.use("/api/bills", billRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/admin-assignments", adminAssignmentRoutes);
 
 // Serve uploaded files
 app.use("/uploads", express.static("uploads"));

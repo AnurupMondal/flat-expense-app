@@ -385,3 +385,37 @@ export const uploadApi = {
     }
   },
 };
+
+export const adminAssignmentsApi = {
+  getAssignments: async () => {
+    return apiCall("/admin-assignments", { method: "GET" });
+  },
+
+  getAvailableAdmins: async () => {
+    return apiCall("/admin-assignments/available-admins", { method: "GET" });
+  },
+
+  getAdminBuildings: async (adminId: number) => {
+    return apiCall(`/admin-assignments/admin/${adminId}`, { method: "GET" });
+  },
+
+  assignAdmin: async (adminId: number, buildingId: number) => {
+    return apiCall("/admin-assignments", {
+      method: "POST",
+      body: JSON.stringify({ adminId, buildingId }),
+    });
+  },
+
+  removeAssignment: async (assignmentId: number) => {
+    return apiCall(`/admin-assignments/${assignmentId}`, {
+      method: "DELETE",
+    });
+  },
+
+  bulkAssignAdmin: async (adminId: number, buildingIds: number[]) => {
+    return apiCall("/admin-assignments/bulk", {
+      method: "POST",
+      body: JSON.stringify({ adminId, buildingIds }),
+    });
+  },
+};
