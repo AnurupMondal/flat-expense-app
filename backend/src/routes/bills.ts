@@ -8,45 +8,94 @@ import {
 
 const router = express.Router();
 
-// Get bills for user
+// Get bills for user with pagination and filtering
 router.get(
   "/",
   authenticate,
   async (req: AuthenticatedRequest, res): Promise<void> => {
     try {
       const user = req.user!;
-      let query = "";
-      let values: any[] = [];
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = (page - 1) * limit;
+      const status = req.query.status as string;
+      const month = req.query.month as string;
+      const year = req.query.year as string;
+      const search = req.query.search as string;
 
-      if (user.role === "resident") {
-        query = `
-        SELECT b.*, u.name as user_name, u.flat_number
-        FROM bills b
-        JOIN users u ON b.user_id = u.id
-        WHERE b.user_id = $1
-        ORDER BY b.created_at DESC
-      `;
-        values = [user.userId];
-      } else {
-        // Admins and super-admins can see all bills
-        query = `
+      let query = `
         SELECT b.*, u.name as user_name, u.flat_number, bd.name as building_name
         FROM bills b
         JOIN users u ON b.user_id = u.id
-        JOIN buildings bd ON b.building_id = bd.id
-        ${user.role === "admin" ? "WHERE b.building_id = $1" : ""}
-        ORDER BY b.created_at DESC
+        LEFT JOIN buildings bd ON b.building_id = bd.id
+        WHERE 1=1
       `;
-        if (user.role === "admin" && user.buildingId) {
-          values = [user.buildingId];
-        }
+      let values: any[] = [];
+      let paramCount = 0;
+
+      // Role-based filtering
+      if (user.role === "resident") {
+        paramCount++;
+        query += ` AND b.user_id = $${paramCount}`;
+        values.push(user.userId);
+      } else if (user.role === "admin" && user.buildingId) {
+        paramCount++;
+        query += ` AND b.building_id = $${paramCount}`;
+        values.push(user.buildingId);
       }
+
+      // Additional filters
+      if (status) {
+        paramCount++;
+        query += ` AND b.status = $${paramCount}`;
+        values.push(status);
+      }
+
+      if (month) {
+        paramCount++;
+        query += ` AND b.month = $${paramCount}`;
+        values.push(month);
+      }
+
+      if (year) {
+        paramCount++;
+        query += ` AND b.year = $${paramCount}`;
+        values.push(parseInt(year));
+      }
+
+      if (search) {
+        paramCount++;
+        query += ` AND (u.name ILIKE $${paramCount} OR u.flat_number ILIKE $${paramCount})`;
+        values.push(`%${search}%`);
+      }
+
+      // Count total for pagination
+      const countQuery = query.replace(
+        "SELECT b.*, u.name as user_name, u.flat_number, bd.name as building_name",
+        "SELECT COUNT(*)"
+      );
+      const countResult = await pool.query(countQuery, values);
+      const total = parseInt(countResult.rows[0].count);
+
+      // Add pagination and sorting
+      query += ` ORDER BY b.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+      values.push(limit, offset);
 
       const result = await pool.query(query, values);
 
       res.json({
         success: true,
-        data: { bills: result.rows },
+        data: {
+          bills: result.rows,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            hasNext: page * limit < total,
+            hasPrev: page > 1,
+          },
+        },
       });
     } catch (error) {
       console.error("Get bills error:", error);

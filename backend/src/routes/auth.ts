@@ -48,9 +48,10 @@ router.post("/register", async (req, res) => {
         email,
         false
       );
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
         error: "User already exists with this email",
+        code: "USER_ALREADY_EXISTS"
       });
     }
 
@@ -169,9 +170,10 @@ router.post("/login", async (req, res) => {
       logAuthEvent("Login failed - user not approved", user.id, email, false, {
         status: user.status,
       });
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
         error: "Account is pending approval or has been rejected",
+        code: "ACCOUNT_NOT_APPROVED"
       });
     }
 

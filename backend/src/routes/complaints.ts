@@ -8,51 +8,91 @@ import {
 
 const router = express.Router();
 
-// Get all complaints (filtered by role)
+// Get all complaints (filtered by role) with pagination and filtering
 router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const user = req.user!;
-    let query = "";
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+    const status = req.query.status as string;
+    const category = req.query.category as string;
+    const priority = req.query.priority as string;
+    const search = req.query.search as string;
+    
+    let query = `
+      SELECT c.*, u.name as user_name, u.flat_number, b.name as building_name
+      FROM complaints c
+      JOIN users u ON c.user_id = u.id
+      LEFT JOIN buildings b ON c.building_id = b.id
+      WHERE 1=1
+    `;
     let values: any[] = [];
+    let paramCount = 0;
 
+    // Role-based filtering
     if (user.role === "resident") {
-      // Residents can only see their own complaints
-      query = `
-        SELECT c.*, u.name as user_name, u.flat_number, b.name as building_name
-        FROM complaints c
-        JOIN users u ON c.user_id = u.id
-        LEFT JOIN buildings b ON c.building_id = b.id
-        WHERE c.user_id = $1
-        ORDER BY c.created_at DESC
-      `;
-      values = [user.userId];
-    } else if (user.role === "admin") {
-      // Admins can see complaints for their building
-      query = `
-        SELECT c.*, u.name as user_name, u.flat_number, b.name as building_name
-        FROM complaints c
-        JOIN users u ON c.user_id = u.id
-        LEFT JOIN buildings b ON c.building_id = b.id
-        WHERE c.building_id = $1
-        ORDER BY c.created_at DESC
-      `;
-      values = [user.buildingId];
-    } else {
-      // Super admins can see all complaints
-      query = `
-        SELECT c.*, u.name as user_name, u.flat_number, b.name as building_name
-        FROM complaints c
-        JOIN users u ON c.user_id = u.id
-        LEFT JOIN buildings b ON c.building_id = b.id
-        ORDER BY c.created_at DESC
-      `;
+      paramCount++;
+      query += ` AND c.user_id = $${paramCount}`;
+      values.push(user.userId);
+    } else if (user.role === "admin" && user.buildingId) {
+      paramCount++;
+      query += ` AND c.building_id = $${paramCount}`;
+      values.push(user.buildingId);
     }
+
+    // Additional filters
+    if (status) {
+      paramCount++;
+      query += ` AND c.status = $${paramCount}`;
+      values.push(status);
+    }
+
+    if (category) {
+      paramCount++;
+      query += ` AND c.category ILIKE $${paramCount}`;
+      values.push(`%${category}%`);
+    }
+
+    if (priority) {
+      paramCount++;
+      query += ` AND c.priority = $${paramCount}`;
+      values.push(priority);
+    }
+
+    if (search) {
+      paramCount++;
+      query += ` AND (c.description ILIKE $${paramCount} OR c.category ILIKE $${paramCount})`;
+      values.push(`%${search}%`);
+    }
+
+    // Count total for pagination
+    const countQuery = query.replace(
+      "SELECT c.*, u.name as user_name, u.flat_number, b.name as building_name",
+      "SELECT COUNT(*)"
+    );
+    const countResult = await pool.query(countQuery, values);
+    const total = parseInt(countResult.rows[0].count);
+
+    // Add pagination and sorting
+    query += ` ORDER BY c.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    values.push(limit, offset);
 
     const result = await pool.query(query, values);
 
     res.json({
       success: true,
-      data: { complaints: result.rows },
+      data: {
+        complaints: result.rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasNext: page * limit < total,
+          hasPrev: page > 1,
+        },
+      },
     });
   } catch (error) {
     console.error("Get complaints error:", error);
