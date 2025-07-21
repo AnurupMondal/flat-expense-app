@@ -1,9 +1,9 @@
-import { pool } from '../config/database';
+import { pool } from "../config/database";
 
 export interface NotificationData {
   title: string;
   message: string;
-  type: 'bill' | 'complaint' | 'announcement' | 'system';
+  type: "bill" | "complaint" | "announcement" | "system";
   urgent?: boolean;
   data?: any;
 }
@@ -31,21 +31,26 @@ class NotificationService {
       inApp: null as any,
       email: null as any,
       push: null as any,
-      errors: [] as string[]
+      errors: [] as string[],
     };
 
     // Always create in-app notification as record
     if (channels.inApp !== false) {
       try {
-        results.inApp = await this.createInAppNotification(userId, buildingId, notification);
+        results.inApp = await this.createInAppNotification(
+          userId,
+          buildingId,
+          notification
+        );
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         results.errors.push(`In-app notification failed: ${errorMessage}`);
       }
     }
 
     // Get user details for email/push
-    const userQuery = 'SELECT email, push_token FROM users WHERE id = $1';
+    const userQuery = "SELECT email, push_token FROM users WHERE id = $1";
     const userResult = await pool.query(userQuery, [userId]);
     const user = userResult.rows[0];
 
@@ -56,7 +61,8 @@ class NotificationService {
           this.MAX_RETRIES
         );
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         results.errors.push(`Email notification failed: ${errorMessage}`);
       }
     }
@@ -68,7 +74,8 @@ class NotificationService {
           this.MAX_RETRIES
         );
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         results.errors.push(`Push notification failed: ${errorMessage}`);
       }
     }
@@ -97,7 +104,7 @@ class NotificationService {
       notification.title,
       notification.message,
       notification.urgent || false,
-      notification.data ? JSON.stringify(notification.data) : null
+      notification.data ? JSON.stringify(notification.data) : null,
     ];
 
     const result = await pool.query(query, values);
@@ -107,45 +114,55 @@ class NotificationService {
   /**
    * Send email notification with retry logic
    */
-  static async sendEmailNotification(email: string, notification: NotificationData) {
+  static async sendEmailNotification(
+    email: string,
+    notification: NotificationData
+  ) {
     // Mock email service - replace with actual email provider
     console.log(`Sending email to ${email}: ${notification.title}`);
-    
+
     // Simulate potential failures
     if (Math.random() < 0.3) {
-      throw new Error('Email service temporarily unavailable');
+      throw new Error("Email service temporarily unavailable");
     }
 
     // Simulate email sending delay
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     return {
       success: true,
-      channel: 'email',
+      channel: "email",
       recipient: email,
-      messageId: `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      messageId: `email_${Date.now()}_${Math.random()
+        .toString(36)
+        .substr(2, 9)}`,
     };
   }
 
   /**
    * Send push notification
    */
-  static async sendPushNotification(pushToken: string, notification: NotificationData) {
+  static async sendPushNotification(
+    pushToken: string,
+    notification: NotificationData
+  ) {
     // Mock push service - replace with FCM/APNS
     console.log(`Sending push to ${pushToken}: ${notification.title}`);
-    
+
     // Simulate potential failures
     if (Math.random() < 0.2) {
-      throw new Error('Push service unavailable');
+      throw new Error("Push service unavailable");
     }
 
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     return {
       success: true,
-      channel: 'push',
+      channel: "push",
       recipient: pushToken,
-      messageId: `push_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      messageId: `push_${Date.now()}_${Math.random()
+        .toString(36)
+        .substr(2, 9)}`,
     };
   }
 
@@ -163,13 +180,16 @@ class NotificationService {
         return await fn();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         console.warn(`Attempt ${attempt + 1} failed: ${errorMessage}`);
 
         // Don't wait after the last attempt
         if (attempt < maxRetries - 1) {
-          const delay = this.RETRY_DELAYS[attempt] || this.RETRY_DELAYS[this.RETRY_DELAYS.length - 1];
-          await new Promise(resolve => setTimeout(resolve, delay));
+          const delay =
+            this.RETRY_DELAYS[attempt] ||
+            this.RETRY_DELAYS[this.RETRY_DELAYS.length - 1];
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
@@ -181,7 +201,8 @@ class NotificationService {
    * Get unread notification count for user
    */
   static async getUnreadCount(userId: string): Promise<number> {
-    const query = 'SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND read = false';
+    const query =
+      "SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND read = false";
     const result = await pool.query(query, [userId]);
     return parseInt(result.rows[0].count);
   }
@@ -196,7 +217,7 @@ class NotificationService {
       WHERE id = $1 AND user_id = $2
       RETURNING *
     `;
-    
+
     const result = await pool.query(query, [notificationId, userId]);
     return result.rows[0];
   }
@@ -211,7 +232,7 @@ class NotificationService {
       WHERE user_id = $1 AND read = false
       RETURNING COUNT(*) as updated_count
     `;
-    
+
     const result = await pool.query(query, [userId]);
     return result.rowCount || 0;
   }
@@ -224,30 +245,37 @@ class NotificationService {
     notification: NotificationData,
     channels: NotificationChannels = { inApp: true }
   ) {
-    const usersQuery = "SELECT id FROM users WHERE building_id = $1 AND status = 'approved'";
+    const usersQuery =
+      "SELECT id FROM users WHERE building_id = $1 AND status = 'approved'";
     const usersResult = await pool.query(usersQuery, [buildingId]);
-    
+
     const results = [];
     for (const user of usersResult.rows) {
       try {
-        const result = await this.sendNotification(user.id, buildingId, notification, channels);
+        const result = await this.sendNotification(
+          user.id,
+          buildingId,
+          notification,
+          channels
+        );
         results.push({ userId: user.id, ...result });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        results.push({ 
-          userId: user.id, 
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        results.push({
+          userId: user.id,
           error: errorMessage,
           inApp: null,
           email: null,
           push: null,
-          errors: [errorMessage]
+          errors: [errorMessage],
         });
       }
     }
-    
+
     return {
       totalUsers: usersResult.rows.length,
-      results
+      results,
     };
   }
 }

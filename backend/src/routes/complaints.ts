@@ -19,7 +19,7 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
     const category = req.query.category as string;
     const priority = req.query.priority as string;
     const search = req.query.search as string;
-    
+
     let query = `
       SELECT c.*, u.name as user_name, u.flat_number, b.name as building_name
       FROM complaints c
@@ -79,7 +79,9 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
     const total = parseInt(countResult.rows[0].count);
 
     // Add pagination and sorting
-    query += ` ORDER BY c.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    query += ` ORDER BY c.created_at DESC LIMIT $${paramCount + 1} OFFSET $${
+      paramCount + 2
+    }`;
     values.push(limit, offset);
 
     const result = await pool.query(query, values);

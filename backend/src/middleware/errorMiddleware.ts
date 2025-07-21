@@ -32,7 +32,12 @@ export class AppError extends Error {
   public code?: string;
   public details?: any;
 
-  constructor(message: string, statusCode: number, code?: string, details?: any) {
+  constructor(
+    message: string,
+    statusCode: number,
+    code?: string,
+    details?: any
+  ) {
     super(message);
     this.statusCode = statusCode;
     this.status = `${statusCode}`.startsWith("4") ? "fail" : "error";
@@ -69,20 +74,20 @@ export const createErrorResponse = (
     timestamp: new Date().toISOString(),
     path: req.originalUrl,
   };
-  
+
   if (code !== undefined) {
     response.code = code;
   }
-  
+
   if (process.env.NODE_ENV === "development" && details !== undefined) {
     response.details = details;
   }
-  
-  const requestId = req.headers['x-request-id'] as string;
+
+  const requestId = req.headers["x-request-id"] as string;
   if (requestId) {
     response.requestId = requestId;
   }
-  
+
   return response;
 };
 
@@ -93,17 +98,17 @@ export const createSuccessResponse = <T>(
 ): ApiResponse<T> => {
   const response: ApiResponse<T> = {
     success: true,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
+
   if (data !== undefined) {
     response.data = data;
   }
-  
+
   if (message !== undefined) {
     response.message = message;
   }
-  
+
   return response;
 };
 
@@ -114,14 +119,14 @@ export const notFound = (
   next: NextFunction
 ): void => {
   logger.api(`404 Not Found: ${req.method} ${req.originalUrl}`);
-  
+
   const errorResponse = createErrorResponse(
     "Endpoint not found",
     404,
     req,
     "ENDPOINT_NOT_FOUND"
   );
-  
+
   res.status(404).json(errorResponse);
 };
 
@@ -146,7 +151,7 @@ export const errorHandler = (
   });
 
   // Handle specific error types
-  
+
   // Mongoose bad ObjectId
   if (err.name === "CastError") {
     error.message = "Invalid resource ID format";
@@ -207,7 +212,10 @@ export const errorHandler = (
   }
 
   // Rate limiting errors
-  if (err.message.includes("Rate limit") || err.message.includes("Too Many Requests")) {
+  if (
+    err.message.includes("Rate limit") ||
+    err.message.includes("Too Many Requests")
+  ) {
     error.message = "Too many requests - rate limit exceeded";
     statusCode = 429;
     errorCode = "RATE_LIMIT_EXCEEDED";

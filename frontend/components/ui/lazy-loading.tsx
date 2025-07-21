@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 // Lazy loading wrapper component
 interface LazyWrapperProps {
@@ -20,36 +20,36 @@ const defaultFallback = (
 export const LazyWrapper: React.FC<LazyWrapperProps> = ({
   children,
   fallback = defaultFallback,
-  minLoadTime = 0
+  minLoadTime = 0,
 }) => {
-  return (
-    <Suspense fallback={fallback}>
-      {children}
-    </Suspense>
-  );
+  return <Suspense fallback={fallback}>{children}</Suspense>;
 };
 
 // Enhanced loading component for different contexts
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   text?: string;
   className?: string;
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'md',
-  text = 'Loading...',
-  className = ''
+  size = "md",
+  text = "Loading...",
+  className = "",
 }) => {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center space-y-2 ${className}`}>
-      <Loader2 className={`animate-spin text-purple-600 ${sizeClasses[size]}`} />
+    <div
+      className={`flex flex-col items-center justify-center space-y-2 ${className}`}
+    >
+      <Loader2
+        className={`animate-spin text-purple-600 ${sizeClasses[size]}`}
+      />
       {text && (
         <p className="text-sm text-gray-600 dark:text-gray-400">{text}</p>
       )}
@@ -79,9 +79,9 @@ export const CardSkeleton: React.FC<{ count?: number }> = ({ count = 1 }) => {
 };
 
 // Table skeleton loader
-export const TableSkeleton: React.FC<{ rows?: number; cols?: number }> = ({ 
-  rows = 5, 
-  cols = 4 
+export const TableSkeleton: React.FC<{ rows?: number; cols?: number }> = ({
+  rows = 5,
+  cols = 4,
 }) => {
   return (
     <div className="animate-pulse">
@@ -90,17 +90,26 @@ export const TableSkeleton: React.FC<{ rows?: number; cols?: number }> = ({
         <div className="border-b border-gray-200 dark:border-gray-700 p-4">
           <div className="grid grid-cols-4 gap-4">
             {Array.from({ length: cols }).map((_, index) => (
-              <div key={index} className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div
+                key={index}
+                className="h-4 bg-gray-200 dark:bg-gray-700 rounded"
+              ></div>
             ))}
           </div>
         </div>
-        
+
         {/* Rows */}
         {Array.from({ length: rows }).map((_, rowIndex) => (
-          <div key={rowIndex} className="border-b border-gray-200 dark:border-gray-700 p-4">
+          <div
+            key={rowIndex}
+            className="border-b border-gray-200 dark:border-gray-700 p-4"
+          >
             <div className="grid grid-cols-4 gap-4">
               {Array.from({ length: cols }).map((_, colIndex) => (
-                <div key={colIndex} className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div
+                  key={colIndex}
+                  className="h-3 bg-gray-200 dark:bg-gray-700 rounded"
+                ></div>
               ))}
             </div>
           </div>

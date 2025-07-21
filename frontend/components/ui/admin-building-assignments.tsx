@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { Button } from './button';
-import { Badge } from './badge';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from './dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from './select';
-import { Input } from './input';
-import { Label } from './label';
-import { toast } from './use-toast';
-import { adminAssignmentsApi, buildingsApi } from '../../lib/api';
-import { Building, Users, UserPlus, Trash2, Search } from 'lucide-react';
-import { Building as BuildingType } from '../../types/app-types';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { Button } from "./button";
+import { Badge } from "./badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./select";
+import { Input } from "./input";
+import { Label } from "./label";
+import { toast } from "./use-toast";
+import { adminAssignmentsApi, buildingsApi } from "../../lib/api";
+import { Building, Users, UserPlus, Trash2, Search } from "lucide-react";
+import { Building as BuildingType } from "../../types/app-types";
 
 interface Admin {
   id: number;
@@ -47,9 +47,9 @@ const AdminBuildingAssignments: React.FC = () => {
   const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [buildings, setBuildings] = useState<BuildingType[]>([]);
-  const [selectedAdmin, setSelectedAdmin] = useState<string>('');
-  const [selectedBuilding, setSelectedBuilding] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAdmin, setSelectedAdmin] = useState<string>("");
+  const [selectedBuilding, setSelectedBuilding] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -68,9 +68,9 @@ const AdminBuildingAssignments: React.FC = () => {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to load admin assignments',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load admin assignments",
+        variant: "destructive",
       });
     }
   };
@@ -83,9 +83,9 @@ const AdminBuildingAssignments: React.FC = () => {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to load admins',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load admins",
+        variant: "destructive",
       });
     }
   };
@@ -96,9 +96,9 @@ const AdminBuildingAssignments: React.FC = () => {
       setBuildings(buildings);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to load buildings',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load buildings",
+        variant: "destructive",
       });
     }
   };
@@ -106,9 +106,9 @@ const AdminBuildingAssignments: React.FC = () => {
   const handleAssignAdmin = async () => {
     if (!selectedAdmin || !selectedBuilding) {
       toast({
-        title: 'Error',
-        description: 'Please select both admin and building',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please select both admin and building",
+        variant: "destructive",
       });
       return;
     }
@@ -122,19 +122,19 @@ const AdminBuildingAssignments: React.FC = () => {
 
       if (response.success) {
         toast({
-          title: 'Success',
-          description: 'Admin assigned to building successfully',
+          title: "Success",
+          description: "Admin assigned to building successfully",
         });
         setIsDialogOpen(false);
-        setSelectedAdmin('');
-        setSelectedBuilding('');
+        setSelectedAdmin("");
+        setSelectedBuilding("");
         loadAssignments();
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to assign admin',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to assign admin",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -142,33 +142,36 @@ const AdminBuildingAssignments: React.FC = () => {
   };
 
   const handleRemoveAssignment = async (assignmentId: number) => {
-    if (!confirm('Are you sure you want to remove this assignment?')) {
+    if (!confirm("Are you sure you want to remove this assignment?")) {
       return;
     }
 
     try {
       const response = await adminAssignmentsApi.removeAssignment(assignmentId);
-      
+
       if (response.success) {
         toast({
-          title: 'Success',
-          description: 'Assignment removed successfully',
+          title: "Success",
+          description: "Assignment removed successfully",
         });
         loadAssignments();
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to remove assignment',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to remove assignment",
+        variant: "destructive",
       });
     }
   };
 
-  const filteredAssignments = assignments.filter(assignment =>
-    assignment.admin_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    assignment.building_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    assignment.admin_email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAssignments = assignments.filter(
+    (assignment) =>
+      assignment.admin_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      assignment.building_name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      assignment.admin_email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Group assignments by admin
@@ -192,12 +195,14 @@ const AdminBuildingAssignments: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Admin Building Assignments</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            Admin Building Assignments
+          </h2>
           <p className="text-muted-foreground">
             Manage which buildings each admin is responsible for
           </p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -225,10 +230,13 @@ const AdminBuildingAssignments: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <Label htmlFor="building">Select Building</Label>
-                <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
+                <Select
+                  value={selectedBuilding}
+                  onValueChange={setSelectedBuilding}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a building" />
                   </SelectTrigger>
@@ -241,13 +249,16 @@ const AdminBuildingAssignments: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleAssignAdmin} disabled={loading}>
-                  {loading ? 'Assigning...' : 'Assign'}
+                  {loading ? "Assigning..." : "Assign"}
                 </Button>
               </div>
             </div>
@@ -260,7 +271,9 @@ const AdminBuildingAssignments: React.FC = () => {
         <Input
           placeholder="Search admins or buildings..."
           value={searchTerm}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearchTerm(e.target.value)
+          }
           className="max-w-sm"
         />
       </div>
@@ -287,7 +300,8 @@ const AdminBuildingAssignments: React.FC = () => {
                     <Badge variant="secondary">{admin.email}</Badge>
                   </div>
                   <Badge variant="outline">
-                    {buildings.length} building{buildings.length !== 1 ? 's' : ''}
+                    {buildings.length} building
+                    {buildings.length !== 1 ? "s" : ""}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -301,12 +315,17 @@ const AdminBuildingAssignments: React.FC = () => {
                       <div className="flex items-center space-x-3">
                         <Building className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <p className="font-medium">{assignment.building_name}</p>
+                          <p className="font-medium">
+                            {assignment.building_name}
+                          </p>
                           <p className="text-sm text-muted-foreground">
                             {assignment.building_address}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
+                            Assigned on{" "}
+                            {new Date(
+                              assignment.assigned_at
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
