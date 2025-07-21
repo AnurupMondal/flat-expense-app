@@ -14,6 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
+      - ./database/seed:/docker-entrypoint-initdb.d/seed
     networks:
       - flat-expense-network
     healthcheck:
@@ -34,6 +35,14 @@ services:
       JWT_SECRET: your_super_secret_jwt_key_here_change_in_production
       API_PORT: 3001
       CORS_ORIGIN: http://localhost:3000
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASS: ""
     ports:
       - "3001:3001"
     depends_on:
@@ -63,10 +72,55 @@ services:
       - flat-expense-network
     restart: unless-stopped
 
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: flat-expense-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - flat-expense-network
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # MinIO Object Storage (S3 Compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: flat-expense-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - flat-expense-network
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  # MailHog (SMTP Testing)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: flat-expense-mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - flat-expense-network
+    restart: unless-stopped
+
 networks:
   flat-expense-network:
     driver: bridge
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
     driver: local

@@ -116,10 +116,10 @@ export function ComplaintManagement({
             <div className="text-sm text-blue-700">Submitted</div>
           </CardContent>
         </Card>
-                <Card className="border-0 shadow-sm bg-warning/10 border-warning/20">
+        <Card className="border-0 shadow-sm bg-warning/10 border-warning/20">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-warning-foreground">
-              {complaints.filter(c => c.status === 'assigned').length}
+              {complaints.filter((c) => c.status === "assigned").length}
             </div>
             <div className="text-sm text-warning-foreground">Assigned</div>
           </CardContent>
@@ -127,7 +127,7 @@ export function ComplaintManagement({
         <Card className="border-0 shadow-sm bg-warning/20 border-warning/30">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-warning-foreground">
-              {complaints.filter(c => c.status === 'in-progress').length}
+              {complaints.filter((c) => c.status === "in-progress").length}
             </div>
             <div className="text-sm text-warning-foreground">In Progress</div>
           </CardContent>
