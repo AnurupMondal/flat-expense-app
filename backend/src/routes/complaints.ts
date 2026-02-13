@@ -126,10 +126,12 @@ router.post(
         return;
       }
 
+
       // Get user's building ID and check for assigned admin
       const userQuery = "SELECT building_id FROM users WHERE id = $1";
       const userResult = await pool.query(userQuery, [user.userId]);
       const buildingId = userResult.rows[0]?.building_id;
+
 
       // Find active admin for this building
       let assignedTo = null;
@@ -147,6 +149,7 @@ router.post(
           status = 'assigned';
         }
       }
+
 
       const query = `
       INSERT INTO complaints (user_id, building_id, category, description, priority, status, assigned_to, created_at, updated_at)
@@ -167,6 +170,7 @@ router.post(
       const result = await pool.query(query, values);
       const complaint = result.rows[0];
 
+
       // Get complete complaint data with user and building info
       const fullComplaintQuery = `
       SELECT c.*, u.name as user_name, u.flat_number, b.name as building_name
@@ -177,6 +181,7 @@ router.post(
     `;
 
       const fullResult = await pool.query(fullComplaintQuery, [complaint.id]);
+
 
       res.status(201).json({
         success: true,

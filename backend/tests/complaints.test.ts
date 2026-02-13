@@ -1,4 +1,6 @@
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 import app from '../src/server';
 import { pool } from '../src/config/database';
 
@@ -12,49 +14,59 @@ describe('Complaints Management Tests', () => {
   let testUserId: string;
   let adminUserId: string;
   let resident2UserId: string;
+  let superAdminUserId: string;
+  let hashedPassword: string;
 
   beforeAll(async () => {
     // Clean up existing test data
     await pool.query("DELETE FROM complaint_updates WHERE complaint_id IN (SELECT id FROM complaints WHERE category LIKE 'Test%')");
     await pool.query("DELETE FROM complaints WHERE category LIKE 'Test%'");
     await pool.query("DELETE FROM notifications WHERE title LIKE 'Test%'");
-    await pool.query("DELETE FROM buildings WHERE name LIKE 'Test Complaint%'");
-    await pool.query("DELETE FROM users WHERE email LIKE 'test%complaint%'");
+    await pool.query("DELETE FROM buildings WHERE name LIKE 'Test Complaint%' OR name = 'Other Admin Building' OR name = 'Other Test Building'");
+    await pool.query("DELETE FROM users WHERE email LIKE 'test%complaint%' OR email = 'test.other.admin@example.com'");
+    await pool.query("DELETE FROM admin_building_assignments WHERE admin_id IN (SELECT id FROM users WHERE email LIKE 'test%complaint%')");
+
+    hashedPassword = await bcrypt.hash('password123', 10);
 
     // Create test building first
     const buildingResult = await pool.query(`
       INSERT INTO buildings (name, address, total_units, created_at, updated_at)
       VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id
     `, ['Test Complaint Building', '123 Test Street', 50]);
-    testBuildingId = buildingResult.rows[0].id;
-
-    // Create test users
+    testBuildingId = buildingResult.rows[0].id;    // Create test users
     const superAdminResult = await pool.query(`
       INSERT INTO users (email, password_hash, name, role, status, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id
-    `, ['test.superadmin.complaint@example.com', '$2b$10$hashedpassword', 'Super Admin Test', 'super-admin', 'approved']);
+    `, ['test.superadmin.complaint@example.com', hashedPassword, 'Super Admin Test', 'super-admin', 'approved']);
 
     const adminResult = await pool.query(`
       INSERT INTO users (email, password_hash, name, role, building_id, status, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id
-    `, ['test.admin.complaint@example.com', '$2b$10$hashedpassword', 'Admin Test', 'admin', testBuildingId, 'approved']);
+    `, ['test.admin.complaint@example.com', hashedPassword, 'Admin Test', 'admin', testBuildingId, 'approved']);
 
     const residentResult = await pool.query(`
       INSERT INTO users (email, password_hash, name, role, building_id, flat_number, status, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id
-    `, ['test.resident.complaint@example.com', '$2b$10$hashedpassword', 'Resident Test', 'resident', testBuildingId, '101', 'approved']);
+    `, ['test.resident.complaint@example.com', hashedPassword, 'Resident Test', 'resident', testBuildingId, '101', 'approved']);
 
     const resident2Result = await pool.query(`
       INSERT INTO users (email, password_hash, name, role, building_id, flat_number, status, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id
-    `, ['test.resident2.complaint@example.com', '$2b$10$hashedpassword', 'Resident Test 2', 'resident', testBuildingId, '102', 'approved']);
+    `, ['test.resident2.complaint@example.com', hashedPassword, 'Resident Test 2', 'resident', testBuildingId, '102', 'approved']);
 
     adminUserId = adminResult.rows[0].id;
     testUserId = residentResult.rows[0].id;
     resident2UserId = resident2Result.rows[0].id;
+    superAdminUserId = superAdminResult.rows[0].id;
 
     // Update building admin_id
     await pool.query('UPDATE buildings SET admin_id = $1 WHERE id = $2', [adminUserId, testBuildingId]);
+
+    // Assign admin to building in assignments table
+    await pool.query(`
+      INSERT INTO admin_building_assignments (admin_id, building_id, assigned_by, is_active)
+      VALUES ($1, $2, $3, true)
+    `, [adminUserId, testBuildingId, superAdminUserId]);
 
     // Login and get tokens
     const superAdminLogin = await request(app)
@@ -63,7 +75,7 @@ describe('Complaints Management Tests', () => {
         email: 'test.superadmin.complaint@example.com',
         password: 'password123'
       });
-    
+
     const adminLogin = await request(app)
       .post('/api/auth/login')
       .send({
@@ -119,9 +131,9 @@ describe('Complaints Management Tests', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data.complaint.category).toBe('Test Maintenance');
       expect(response.body.data.complaint.description).toBe('Test complaint description');
-      expect(response.body.data.complaint.status).toBe('submitted');
+      expect(response.body.data.complaint.status).toBe('assigned');
       expect(response.body.data.complaint.priority).toBe('medium');
-      
+
       testComplaintId = response.body.data.complaint.id;
     });
 
@@ -266,6 +278,9 @@ describe('Complaints Management Tests', () => {
 
   describe('PATCH /api/complaints/:id/status - State Transitions', () => {
     it('should allow admin to update complaint status from submitted to assigned', async () => {
+      // Force status back to submitted for this test
+      await pool.query("UPDATE complaints SET status = 'submitted' WHERE id = $1", [testComplaintId]);
+
       const response = await request(app)
         .patch(`/api/complaints/${testComplaintId}/status`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -458,7 +473,7 @@ describe('Complaints Management Tests', () => {
       // Note: The schema supports attachments as TEXT[] but the route doesn't handle file uploads yet
       // This tests the database field support
       const attachments = ['file1.jpg', 'file2.pdf'];
-      
+
       const complaintResult = await pool.query(`
         INSERT INTO complaints (user_id, building_id, category, description, priority, status, attachments, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING *
@@ -529,7 +544,7 @@ describe('Complaints Management Tests', () => {
       // This is hard to test without mocking the database
       // For now, we'll test with a very long description that might cause issues
       const longDescription = 'a'.repeat(10000);
-      
+
       const response = await request(app)
         .post('/api/complaints')
         .set('Authorization', `Bearer ${residentToken}`)
@@ -567,7 +582,7 @@ describe('Complaints Management Tests', () => {
       const otherAdminResult = await pool.query(`
         INSERT INTO users (email, password_hash, name, role, building_id, status, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id
-      `, ['test.other.admin@example.com', '$2b$10$hashedpassword', 'Other Admin', 'admin', otherBuildingResult.rows[0].id, 'approved']);
+      `, ['test.other.admin@example.com', hashedPassword, 'Other Admin', 'admin', otherBuildingResult.rows[0].id, 'approved']);
 
       const otherAdminLogin = await request(app)
         .post('/api/auth/login')

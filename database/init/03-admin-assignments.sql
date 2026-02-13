@@ -2,9 +2,9 @@
 CREATE TABLE IF NOT EXISTS
     admin_building_assignments (
         id SERIAL PRIMARY KEY,
-        admin_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-        building_id INTEGER NOT NULL REFERENCES buildings (id) ON DELETE CASCADE,
-        assigned_by INTEGER NOT NULL REFERENCES users (id),
+        admin_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        building_id UUID NOT NULL REFERENCES buildings (id) ON DELETE CASCADE,
+        assigned_by UUID NOT NULL REFERENCES users (id),
         assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

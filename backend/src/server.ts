@@ -147,13 +147,15 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.API_PORT || 3001;
 
-server.listen(PORT, () => {
-  logger.system(`Server running on port ${PORT}`, {
-    port: PORT,
-    healthCheck: `http://localhost:${PORT}/api/health`,
-    corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, () => {
+    logger.system(`Server running on port ${PORT}`, {
+      port: PORT,
+      healthCheck: `http://localhost:${PORT}/api/health`,
+      corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    });
   });
-});
+}
 
 // Graceful shutdown
 process.on("SIGTERM", () => {

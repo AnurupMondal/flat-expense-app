@@ -272,7 +272,7 @@ export default function ResidentDashboard({
                     No Bills Available
                   </h3>
                   <p className="text-muted-foreground">
-                    You don't have any bills at the moment.
+                    You don&apos;t have any bills at the moment.
                   </p>
                 </CardContent>
               </Card>
@@ -430,8 +430,8 @@ export default function ResidentDashboard({
       {message && (
         <Alert
           className={`mb-6 ${message.type === "error"
-              ? "border-red-200 bg-red-50"
-              : "border-green-200 bg-green-50"
+            ? "border-red-200 bg-red-50"
+            : "border-green-200 bg-green-50"
             }`}
         >
           <AlertDescription
