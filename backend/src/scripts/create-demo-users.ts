@@ -229,8 +229,8 @@ class DemoDataCreator {
 
           // Create admin-building assignment record
           await pool.query(
-            `INSERT INTO admin_building_assignments (id, admin_id, building_id, assigned_by, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+            `INSERT INTO admin_building_assignments (id, admin_id, building_id, assigned_by, is_active, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, true, NOW(), NOW())`,
             [
               uuidv4(),
               admin.id,
@@ -332,6 +332,7 @@ class DemoDataCreator {
           admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
           building_id UUID NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
           assigned_by UUID REFERENCES users(id) ON DELETE SET NULL,
+          is_active BOOLEAN DEFAULT true,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           UNIQUE(admin_id, building_id)

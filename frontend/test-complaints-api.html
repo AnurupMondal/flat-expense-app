@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Complaints API</title>
+</head>
+
+<body>
+    <h1>Test Complaints API</h1>
+    <button onclick="testLogin()">1. Login</button>
+    <button onclick="testComplaints()">2. Test Complaints API</button>
+    <div id="output"></div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:3001/api";
+        let token = null;
+
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const url = `${API_BASE_URL}${endpoint}`;
+                const config = {
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token && { Authorization: `Bearer ${token}` }),
+                        ...options.headers,
+                    },
+                    ...options,
+                };
+
+                console.log("Making API call to:", url, "with config:", config);
+                const response = await fetch(url, config);
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                }
+
+                return result;
+            } catch (error) {
+                console.error("API call failed:", error);
+                return {
+                    success: false,
+                    error: error instanceof Error ? error.message : "An unexpected error occurred",
+                };
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const result = await apiCall("/auth/login", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        email: "admin@flatmanager.com",
+                        password: "admin123"
+                    }),
+                });
+
+                console.log("Login result:", result);
+                document.getElementById("output").innerHTML += "<p>Login result: " + JSON.stringify(result, null, 2) + "</p>";
+
+                if (result.success && result.data && result.data.token) {
+                    token = result.data.token;
+                    console.log("Token set:", token);
+                    document.getElementById("output").innerHTML += "<p>Token obtained successfully!</p>";
+                } else {
+                    document.getElementById("output").innerHTML += "<p>Login failed: " + (result.error || "Unknown error") + "</p>";
+                }
+            } catch (error) {
+                console.error("Login test failed:", error);
+                document.getElementById("output").innerHTML += "<p>Login test failed: " + error.message + "</p>";
+            }
+        }
+
+        async function testComplaints() {
+            if (!token) {
+                document.getElementById("output").innerHTML += "<p>Please login first!</p>";
+                return;
+            }
+
+            try {
+                const result = await apiCall("/complaints");
+                console.log("Complaints result:", result);
+                document.getElementById("output").innerHTML += "<p>Complaints result: " + JSON.stringify(result, null, 2) + "</p>";
+            } catch (error) {
+                console.error("Complaints test failed:", error);
+                document.getElementById("output").innerHTML += "<p>Complaints test failed: " + error.message + "</p>";
+            }
+        }
+    </script>
+</body>
+
+</html>

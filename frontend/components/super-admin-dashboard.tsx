@@ -5,13 +5,14 @@ import { DashboardLayout } from "@/components/ui/dashboard-layout";
 import { DashboardHeader } from "@/components/ui/dashboard-header";
 import { StatsGrid } from "@/components/ui/stats-grid";
 import { ActivityFeed } from "@/components/ui/activity-feed";
-import { ApprovalList } from "@/components/ui/approval-list";
-import { BuildingList } from "@/components/ui/building-list";
-import { AddBuildingForm } from "@/components/ui/add-building-form";
+import BuildingManagement from "@/components/ui/building-management";
+import { FinancialReports } from "@/components/sections/financial-reports/index";
+import { ExportData } from "@/components/sections/export-data";
+import { AnalyticsView } from "@/components/sections/analytics";
 import { UserCard } from "@/components/ui/user-card";
 import { UserManagement } from "@/components/ui/user-management";
 import { ProfileManager } from "@/components/ui/profile-manager";
-import AdminBuildingAssignments from "@/components/ui/admin-building-assignments";
+import ComplaintsManagement from "@/components/ui/complaints-management";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,7 +25,7 @@ import {
   BarChart3,
   PieChart,
 } from "lucide-react";
-import { analyticsApi, usersApi } from "@/lib/api";
+import { analyticsApi, usersApi, complaintsApi } from "@/lib/api";
 import type {
   User,
   Building,
@@ -57,6 +58,7 @@ export default function SuperAdminDashboard({
   bills,
   onUpdateUsers,
   onUpdateBuildings,
+  onUpdateComplaints,
   onLogout,
 }: SuperAdminDashboardProps) {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
@@ -124,9 +126,8 @@ export default function SuperAdminDashboard({
     ...pendingUsers.slice(0, 2).map((user) => ({
       type: "info" as const,
       title: "New user registration",
-      description: `${user.name} registered for ${
-        user.flatNumber ? `Flat ${user.flatNumber}` : user.role
-      }`,
+      description: `${user.name} registered for ${user.flatNumber ? `Flat ${user.flatNumber}` : user.role
+        }`,
       time: new Date(user.createdAt).toLocaleDateString(),
     })),
     ...bills
@@ -135,9 +136,8 @@ export default function SuperAdminDashboard({
       .map((bill) => ({
         type: "success" as const,
         title: "Payment received",
-        description: `₹${bill.totalAmount.toLocaleString()} for ${bill.month} ${
-          bill.year
-        }`,
+        description: `₹${bill.totalAmount.toLocaleString()} for ${bill.month} ${bill.year
+          }`,
         time: bill.paidAt
           ? new Date(bill.paidAt).toLocaleDateString()
           : "Recently",
@@ -227,20 +227,85 @@ export default function SuperAdminDashboard({
     setTimeout(() => setMessage(null), 3000);
   };
 
+  // Complaint handlers
+  const handleUpdateComplaint = async (
+    complaintId: string,
+    updates: Partial<Complaint>
+  ) => {
+    try {
+      setIsLoading(true);
+
+      let updatedComplaint;
+
+      if ('assignedTo' in updates) {
+        updatedComplaint = await complaintsApi.assign(
+          complaintId,
+          updates.assignedTo || null
+        );
+      } else {
+        updatedComplaint = await complaintsApi.updateStatus(
+          complaintId,
+          updates.status!,
+          updates.adminResponse
+        );
+      }
+
+      if (updatedComplaint) {
+        const updatedComplaints = complaints.map((complaint) =>
+          complaint.id === complaintId
+            ? { ...complaint, ...updates }
+            : complaint
+        );
+        onUpdateComplaints(updatedComplaints);
+        setMessage({ type: "success", text: "Complaint updated successfully" });
+      } else {
+        setMessage({ type: "error", text: "Failed to update complaint" });
+      }
+    } catch (error) {
+      console.error("Error updating complaint:", error);
+      setMessage({ type: "error", text: "Failed to update complaint" });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleDeleteComplaint = async (complaintId: string) => {
+    try {
+      setIsLoading(true);
+      // Assuming we have a delete API method
+      // await complaintsApi.delete(complaintId);
+
+      const updatedComplaints = complaints.filter(
+        (complaint) => complaint.id !== complaintId
+      );
+      onUpdateComplaints(updatedComplaints);
+      setMessage({ type: "success", text: "Complaint deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting complaint:", error);
+      setMessage({ type: "error", text: "Failed to delete complaint" });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
   const getBreadcrumbTitle = () => {
     switch (activeView) {
       case "overview":
         return "Dashboard Overview";
-      case "approvals":
-        return "User Approvals";
-      case "buildings":
+      case "building-management":
         return "Building Management";
       case "users":
         return "All Users";
-      case "admin-assignments":
-        return "Admin Assignments";
+      case "complaints":
+        return "Complaints Management";
       case "analytics":
         return "Analytics";
+      case "reports":
+        return "Financial Reports";
+      case "export":
+        return "Data Export";
       case "profile":
         return "Profile";
       default:
@@ -270,45 +335,13 @@ export default function SuperAdminDashboard({
           </>
         );
 
-      case "approvals":
+      case "building-management":
         return (
           <>
-            <DashboardHeader
-              title="User Approvals"
-              description="Review and approve new user registrations"
-            >
-              <Badge variant="secondary">{pendingUsers.length} pending</Badge>
-            </DashboardHeader>
-            <ApprovalList
-              users={pendingUsers}
-              buildings={buildings}
-              onApprove={handleApproveUser}
-              onReject={handleRejectUser}
+            <BuildingManagement
+              initialBuildings={buildings}
+              onBuildingsChange={onUpdateBuildings}
             />
-          </>
-        );
-
-      case "buildings":
-        return (
-          <>
-            <DashboardHeader
-              title="Building Management"
-              description="Manage all buildings in the system"
-            >
-              <Button onClick={() => setShowAddBuilding(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Building
-              </Button>
-            </DashboardHeader>
-            {showAddBuilding && (
-              <div className="mb-6">
-                <AddBuildingForm
-                  onAdd={handleAddBuilding}
-                  onCancel={() => setShowAddBuilding(false)}
-                />
-              </div>
-            )}
-            <BuildingList buildings={buildings} />
           </>
         );
 
@@ -327,76 +360,70 @@ export default function SuperAdminDashboard({
           </>
         );
 
-      case "admin-assignments":
-        return (
-          <>
-            <AdminBuildingAssignments />
-          </>
-        );
-
       case "analytics":
         if (loadingAnalytics) {
-          return <p>Loading analytics...</p>;
+          return (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-2">Loading analytics...</span>
+            </div>
+          );
         }
         if (!analytics) {
-          return <p>No analytics data available.</p>;
+          return (
+            <Alert variant="destructive">
+              <AlertDescription>No analytics data available. Please try again later.</AlertDescription>
+            </Alert>
+          );
         }
-        // Prepare stats from analytics
-        const totalRevenue = Object.values(analytics.revenue.yearly).reduce(
-          (sum, y) => sum + y.total,
-          0
-        );
-        const pendingRevenue = Object.values(analytics.revenue.yearly).reduce(
-          (sum, y) => sum + y.pending,
-          0
-        );
-        const totalComplaints = analytics.complaints.byStatus.reduce(
-          (sum, c) => sum + c.count,
-          0
-        );
-        const statsAnalytics = [
-          {
-            title: "Total Revenue",
-            value: `₹${totalRevenue.toLocaleString()}`,
-            change: `₹${(
-              totalRevenue - pendingRevenue
-            ).toLocaleString()} collected`,
-            icon: DollarSign,
-            color: "text-green-600",
-            bg: "bg-green-100",
-          },
-          {
-            title: "Complaints",
-            value: totalComplaints.toString(),
-            change: "",
-            icon: TrendingUp,
-            color: "text-orange-600",
-            bg: "bg-orange-100",
-          },
-          {
-            title: "Occupancy Rate",
-            value: `${analytics.occupancy.rate}%`,
-            change: "",
-            icon: Building2,
-            color: "text-blue-600",
-            bg: "bg-blue-100",
-          },
-          {
-            title: "Total Users",
-            value: analytics.users.total.toString(),
-            change: "",
-            icon: Users,
-            color: "text-purple-600",
-            bg: "bg-purple-100",
-          },
-        ];
+
         return (
           <>
             <DashboardHeader
-              title="Analytics"
-              description="System-wide analytics"
+              title="System Analytics"
+              description="Real-time system performance and occupancy insights"
             />
-            <StatsGrid stats={statsAnalytics} />
+            <AnalyticsView data={analytics} />
+          </>
+        );
+
+      case "complaints":
+        return (
+          <>
+            <ComplaintsManagement
+              currentUser={currentUser}
+              complaints={complaints}
+              users={users}
+              onUpdateComplaint={handleUpdateComplaint}
+            // onDeleteComplaint={handleDeleteComplaint} // Temporarily disabled until API supports it
+            />
+          </>
+        );
+
+      case "reports":
+        return (
+          <>
+            <DashboardHeader
+              title="Financial Reports"
+              description="Detailed financial analytics and reports"
+            />
+            <FinancialReports bills={bills} users={users} buildings={buildings} />
+          </>
+        );
+
+      case "export":
+        return (
+          <>
+            <DashboardHeader
+              title="Export Data"
+              description="Download system data in CSV format"
+            />
+            <ExportData
+              users={users}
+              buildings={buildings}
+              bills={bills}
+              complaints={complaints}
+            />
           </>
         );
 
@@ -454,11 +481,10 @@ export default function SuperAdminDashboard({
     >
       {message && (
         <Alert
-          className={`mb-6 ${
-            message.type === "error"
-              ? "border-red-200 bg-red-50"
-              : "border-green-200 bg-green-50"
-          }`}
+          className={`mb-6 ${message.type === "error"
+            ? "border-red-200 bg-red-50"
+            : "border-green-200 bg-green-50"
+            }`}
         >
           <AlertDescription
             className={

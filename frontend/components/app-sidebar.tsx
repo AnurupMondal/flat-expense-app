@@ -57,19 +57,14 @@ export default function AppSidebar({
           {
             title: "Management",
             items: [
+              { title: "Building Management", icon: Building2, id: "building-management" },
               {
-                title: "User Approvals",
-                icon: Clock,
-                id: "approvals",
+                title: "User Management",
+                icon: Users,
+                id: "users",
                 badge: pendingCount > 0 ? pendingCount.toString() : undefined,
               },
-              { title: "Buildings", icon: Building2, id: "buildings" },
-              { title: "User Management", icon: Users, id: "users" },
-              {
-                title: "Admin Assignments",
-                icon: UserIcon,
-                id: "admin-assignments",
-              },
+              { title: "Complaints", icon: AlertTriangle, id: "complaints" },
               { title: "System Settings", icon: Settings, id: "settings" },
             ],
           },
@@ -96,23 +91,22 @@ export default function AppSidebar({
             ],
           },
           {
-            title: "Residents",
-            items: [
-              {
-                title: "Approvals",
-                icon: Clock,
-                id: "approvals",
-                badge: pendingCount > 0 ? pendingCount.toString() : undefined,
-              },
-              { title: "Residents", icon: Users, id: "residents" },
-            ],
-          },
-          {
             title: "Building Management",
             items: [
               { title: "Buildings", icon: Building2, id: "buildings" },
               { title: "Bills", icon: Receipt, id: "bills" },
               { title: "Complaints", icon: AlertTriangle, id: "complaints" },
+            ],
+          },
+          {
+            title: "Residents",
+            items: [
+              {
+                title: "Residents",
+                icon: Users,
+                id: "residents",
+                badge: pendingCount > 0 ? pendingCount.toString() : undefined,
+              },
             ],
           },
           {
@@ -207,9 +201,9 @@ export default function AppSidebar({
                       "w-full text-left font-normal",
                       collapsed ? "justify-center px-2" : "justify-start gap-3",
                       isActive &&
-                        "bg-secondary text-secondary-foreground shadow-sm",
+                      "bg-secondary text-secondary-foreground shadow-sm",
                       !isActive &&
-                        "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                     onClick={() => onViewChange(item.id)}
                     title={collapsed ? item.title : undefined}
@@ -242,9 +236,8 @@ export default function AppSidebar({
       {/* Footer */}
       <div className="border-t border-sidebar-border p-4 flex-shrink-0">
         <div
-          className={`flex items-center mb-3 ${
-            collapsed ? "justify-center" : "gap-3"
-          }`}
+          className={`flex items-center mb-3 ${collapsed ? "justify-center" : "gap-3"
+            }`}
         >
           <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
             <UserIcon className="h-4 w-4" />

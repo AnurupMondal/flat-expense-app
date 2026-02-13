@@ -1,5 +1,6 @@
 import express from "express";
 import { pool } from "../config/database";
+import bcrypt from "bcryptjs";
 import {
   authenticate,
   authorize,
@@ -59,9 +60,8 @@ router.get(
       const total = parseInt(countResult.rows[0].count);
 
       // Add pagination
-      query += ` ORDER BY u.created_at DESC LIMIT $${paramCount + 1} OFFSET $${
-        paramCount + 2
-      }`;
+      query += ` ORDER BY u.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2
+        }`;
       values.push(limit, offset);
 
       const result = await pool.query(query, values);
@@ -85,6 +85,78 @@ router.get(
       return res.status(500).json({
         success: false,
         error: "Server error while fetching users",
+      });
+    }
+  }
+);
+
+// Create new user (Super Admin only)
+router.post(
+  "/",
+  authenticate,
+  authorize("super-admin"),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { email, password, name, phone, role, building_id, flat_number } =
+        req.body;
+
+      if (!email || !password || !name || !role) {
+        return res.status(400).json({
+          success: false,
+          error: "Email, password, name, and role are required",
+        });
+      }
+
+      // Check if user exists
+      const existingUser = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [email]
+      );
+
+      if (existingUser.rows.length > 0) {
+        return res.status(409).json({
+          success: false,
+          error: "User with this email already exists",
+        });
+      }
+
+      // Hash password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+
+      const query = `
+        INSERT INTO users (email, password_hash, name, phone, role, building_id, flat_number, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, email, name, role, phone, building_id, flat_number, status, created_at
+      `;
+
+      const values = [
+        email.toLowerCase(),
+        passwordHash,
+        name,
+        phone || null,
+        role,
+        building_id || null,
+        flat_number || null,
+        role === "super-admin" || role === "admin" ? "approved" : "pending", // Auto-approve admin roles, residents pending? or auto-approve all created by super admin?
+        // Let's auto-approve everyone created by super-admin for now.
+      ];
+
+      // Actually, line 78 in my logic above had "approved". Let's stick with approved since super admin created them.
+      values[7] = "approved";
+
+      const result = await pool.query(query, values);
+      const newUser = result.rows[0];
+
+      return res.status(201).json({
+        success: true,
+        data: { user: newUser },
+      });
+    } catch (error) {
+      console.error("Create user error:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Server error while creating user",
       });
     }
   }

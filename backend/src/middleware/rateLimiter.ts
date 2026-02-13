@@ -3,9 +3,9 @@ import { Request, Response, NextFunction } from "express";
 
 // Rate limiter configuration
 const rateLimiter = new RateLimiterMemory({
-  points: 100, // Number of requests
-  duration: 900, // Per 15 minutes (900 seconds)
-  blockDuration: 900, // Block for 15 minutes if limit exceeded
+  points: 1000, // Number of requests
+  duration: 60, // Per 1 minute (60 seconds)
+  blockDuration: 60, // Block for 1 minute if limit exceeded
 });
 
 // Rate limiter middleware

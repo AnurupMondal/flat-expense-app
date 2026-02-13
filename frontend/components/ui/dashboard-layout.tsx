@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import AppSidebar from "@/components/app-sidebar";
+import { BottomNav } from "@/components/ui/bottom-nav";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SidebarToggle } from "@/components/ui/sidebar-toggle";
@@ -110,11 +111,10 @@ export function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar */}
+      {/* Sidebar - Hidden on mobile, visible on desktop */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "w-64" : "w-16"
-        } border-r border-border bg-sidebar-background flex-shrink-0 h-screen`}
+        className={`hidden md:flex transition-all duration-300 ease-in-out ${sidebarOpen ? "w-64" : "w-16"
+          } border-r border-border bg-sidebar-background flex-shrink-0 h-screen`}
       >
         <AppSidebar
           currentUser={currentUser}
@@ -129,16 +129,16 @@ export function DashboardLayout({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen bg-background overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border px-4 bg-card/95 backdrop-blur-md z-20 shadow-sm">
+      <div className="flex-1 flex flex-col h-screen bg-background overflow-hidden relative">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border px-4 bg-card/95 backdrop-blur-md z-20 shadow-sm sticky top-0">
           <div className="flex items-center gap-2">
             <SidebarToggle
-              className="-ml-1"
+              className="-ml-1 hidden md:flex"
               onToggleOrientation={toggleOrientation}
               isHorizontal={isHorizontal}
               onToggleSidebar={toggleSidebar}
             />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Separator orientation="vertical" className="mr-2 h-4 hidden md:block" />
             <Breadcrumb>
               <BreadcrumbList>
                 {breadcrumbParent && (
@@ -165,9 +165,20 @@ export function DashboardLayout({
           <ThemeToggle />
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-background">
-          <div className="p-6 space-y-6 max-w-full">{children}</div>
+        <main className="flex-1 overflow-y-auto bg-background pb-20 md:pb-6">
+          <div className="p-4 md:p-6 space-y-6 max-w-full">{children}</div>
         </main>
+
+        {/* Bottom Navigation - Only visible on mobile */}
+        <div className="md:hidden">
+          <BottomNav
+            currentUser={currentUser}
+            activeView={activeView}
+            onViewChange={onViewChange}
+            pendingCount={pendingCount}
+            notificationCount={notificationCount}
+          />
+        </div>
       </div>
     </div>
   );

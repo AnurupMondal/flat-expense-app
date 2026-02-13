@@ -79,13 +79,42 @@ export default function FlatExpenseApp() {
           }
         }
 
-        // Load all data in parallel
+        // Load all data in parallel - but only if we have a token
+        console.log("🔍 Starting parallel data loading...");
+        const dataToken = localStorage.getItem("token");
+        console.log(
+          "🔍 Token available for data loading:",
+          !!dataToken,
+          dataToken?.substring(0, 20) + "..."
+        );
+
+        const dataPromises = {
+          users: usersApi.getAll().catch((err) => {
+            console.error("🔍 Users API error:", err);
+            return null;
+          }),
+          buildings: buildingsApi.getAll().catch((err) => {
+            console.error("🔍 Buildings API error:", err);
+            return [];
+          }),
+          complaints: dataToken
+            ? complaintsApi.getAll().catch((err) => {
+                console.error("🔍 Complaints API error:", err);
+                return [];
+              })
+            : Promise.resolve([]),
+          bills: billsApi.getAll().catch((err) => {
+            console.error("🔍 Bills API error:", err);
+            return [];
+          }),
+        };
+
         const [usersData, buildingsData, complaintsData, billsData] =
           await Promise.all([
-            usersApi.getAll(),
-            buildingsApi.getAll(),
-            complaintsApi.getAll(),
-            billsApi.getAll(),
+            dataPromises.users,
+            dataPromises.buildings,
+            dataPromises.complaints,
+            dataPromises.bills,
           ]);
 
         console.log("Loaded data:", {
@@ -94,6 +123,8 @@ export default function FlatExpenseApp() {
           complaints: complaintsData?.length || 0,
           bills: billsData?.length || 0,
         });
+
+        console.log("🔍 Detailed complaintsData:", complaintsData);
 
         setUsers(usersData?.users || []);
         setBuildings(buildingsData || []);

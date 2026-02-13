@@ -55,14 +55,13 @@ export default function AppSidebar({
           {
             title: "Management",
             items: [
+              { title: "Buildings", icon: Building2, id: "buildings" },
               {
-                title: "User Approvals",
-                icon: Clock,
-                id: "approvals",
+                title: "User Management",
+                icon: Users,
+                id: "users",
                 badge: pendingCount > 0 ? pendingCount.toString() : undefined,
               },
-              { title: "Buildings", icon: Building2, id: "buildings" },
-              { title: "User Management", icon: Users, id: "users" },
               { title: "System Settings", icon: Settings, id: "settings" },
             ],
           },
@@ -92,12 +91,11 @@ export default function AppSidebar({
             title: "Residents",
             items: [
               {
-                title: "Approvals",
-                icon: Clock,
-                id: "approvals",
+                title: "Residents",
+                icon: Users,
+                id: "residents",
                 badge: pendingCount > 0 ? pendingCount.toString() : undefined,
               },
-              { title: "Residents", icon: Users, id: "residents" },
             ],
           },
           {
@@ -195,9 +193,9 @@ export default function AppSidebar({
                     className={cn(
                       "w-full justify-start gap-3 text-left font-normal",
                       isActive &&
-                        "bg-secondary text-secondary-foreground shadow-sm",
+                      "bg-secondary text-secondary-foreground shadow-sm",
                       !isActive &&
-                        "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                     onClick={() => onViewChange(item.id)}
                   >

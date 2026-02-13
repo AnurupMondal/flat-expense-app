@@ -1,5 +1,6 @@
 import express from "express";
 import { pool } from "../config/database";
+import { v4 as uuidv4 } from "uuid";
 import {
   authenticate,
   authorize,
@@ -20,7 +21,7 @@ router.get(
         aba.id,
         aba.admin_id,
         aba.building_id,
-        aba.assigned_at,
+        aba.created_at as assigned_at,
         aba.is_active,
         u.name as admin_name,
         u.email as admin_email,
@@ -30,9 +31,9 @@ router.get(
       FROM admin_building_assignments aba
       JOIN users u ON aba.admin_id = u.id
       JOIN buildings b ON aba.building_id = b.id
-      JOIN users assigned_by_user ON aba.assigned_by = assigned_by_user.id
+      LEFT JOIN users assigned_by_user ON aba.assigned_by = assigned_by_user.id
       WHERE aba.is_active = true
-      ORDER BY aba.assigned_at DESC
+      ORDER BY aba.created_at DESC
     `;
 
       const result = await pool.query(query);
@@ -61,7 +62,7 @@ router.get(
       const query = `
       SELECT id, name, email, phone
       FROM users
-      WHERE role = 'admin' AND is_verified = true
+      WHERE role = 'admin' AND status = 'approved'
       ORDER BY name
     `;
 
@@ -94,10 +95,10 @@ router.get(
       SELECT 
         aba.id,
         aba.building_id,
-        aba.assigned_at,
+        aba.created_at as assigned_at,
         b.name as building_name,
         b.address as building_address,
-        b.total_flats
+        b.total_units
       FROM admin_building_assignments aba
       JOIN buildings b ON aba.building_id = b.id
       WHERE aba.admin_id = $1 AND aba.is_active = true
@@ -166,13 +167,13 @@ router.post(
         return;
       }
 
-      // Check if assignment already exists
-      const existingAssignment = await pool.query(
+      // Check if assignment already exists (active)
+      const existingActiveAssignment = await pool.query(
         "SELECT id FROM admin_building_assignments WHERE admin_id = $1 AND building_id = $2 AND is_active = true",
         [adminId, buildingId]
       );
 
-      if (existingAssignment.rows.length > 0) {
+      if (existingActiveAssignment.rows.length > 0) {
         res.status(409).json({
           success: false,
           error: "Admin is already assigned to this building",
@@ -180,18 +181,40 @@ router.post(
         return;
       }
 
-      // Create new assignment
-      const insertQuery = `
-      INSERT INTO admin_building_assignments (admin_id, building_id, assigned_by)
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `;
+      // Check if there's an inactive (previously removed) assignment to reactivate
+      const existingInactiveAssignment = await pool.query(
+        "SELECT id FROM admin_building_assignments WHERE admin_id = $1 AND building_id = $2 AND is_active = false",
+        [adminId, buildingId]
+      );
 
-      const result = await pool.query(insertQuery, [
-        adminId,
-        buildingId,
-        user.userId,
-      ]);
+      let result;
+      if (existingInactiveAssignment.rows.length > 0) {
+        // Reactivate the existing assignment
+        const reactivateQuery = `
+          UPDATE admin_building_assignments 
+          SET is_active = true, assigned_by = $1, updated_at = CURRENT_TIMESTAMP
+          WHERE admin_id = $2 AND building_id = $3 AND is_active = false
+          RETURNING *
+        `;
+        result = await pool.query(reactivateQuery, [
+          user.userId,
+          adminId,
+          buildingId,
+        ]);
+      } else {
+        // Create new assignment
+        const insertQuery = `
+          INSERT INTO admin_building_assignments (id, admin_id, building_id, assigned_by)
+          VALUES ($1, $2, $3, $4)
+          RETURNING *
+        `;
+        result = await pool.query(insertQuery, [
+          uuidv4(),
+          adminId,
+          buildingId,
+          user.userId,
+        ]);
+      }
 
       res.status(201).json({
         success: true,

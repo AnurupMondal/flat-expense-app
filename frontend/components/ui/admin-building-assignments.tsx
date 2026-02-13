@@ -24,16 +24,16 @@ import { Building, Users, UserPlus, Trash2, Search } from "lucide-react";
 import { Building as BuildingType } from "../../types/app-types";
 
 interface Admin {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone?: string;
 }
 
 interface AdminAssignment {
-  id: number;
-  admin_id: number;
-  building_id: number;
+  id: string;
+  admin_id: string;
+  building_id: string;
   admin_name: string;
   admin_email: string;
   building_name: string;
@@ -116,8 +116,8 @@ const AdminBuildingAssignments: React.FC = () => {
     setLoading(true);
     try {
       const response = await adminAssignmentsApi.assignAdmin(
-        parseInt(selectedAdmin),
-        parseInt(selectedBuilding)
+        selectedAdmin,
+        selectedBuilding
       );
 
       if (response.success) {
@@ -129,6 +129,12 @@ const AdminBuildingAssignments: React.FC = () => {
         setSelectedAdmin("");
         setSelectedBuilding("");
         loadAssignments();
+      } else {
+        toast({
+          title: "Error",
+          description: response.error || "Failed to assign admin",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       toast({
@@ -141,7 +147,7 @@ const AdminBuildingAssignments: React.FC = () => {
     }
   };
 
-  const handleRemoveAssignment = async (assignmentId: number) => {
+  const handleRemoveAssignment = async (assignmentId: string) => {
     if (!confirm("Are you sure you want to remove this assignment?")) {
       return;
     }
@@ -189,7 +195,17 @@ const AdminBuildingAssignments: React.FC = () => {
     }
     acc[adminKey].buildings.push(assignment);
     return acc;
-  }, {} as Record<number, { admin: { id: number; name: string; email: string }; buildings: AdminAssignment[] }>);
+  }, {} as Record<string, { admin: { id: string; name: string; email: string }; buildings: AdminAssignment[] }>);
+
+  // Get admins already assigned to the selected building
+  const adminsForSelectedBuilding = selectedBuilding
+    ? assignments.filter((a) => a.building_id === selectedBuilding).map((a) => a.admin_id)
+    : [];
+
+  // Filter admins to exclude those already assigned to selected building
+  const availableAdmins = selectedBuilding
+    ? admins.filter((admin) => !adminsForSelectedBuilding.includes(admin.id))
+    : admins;
 
   return (
     <div className="space-y-6">
@@ -199,7 +215,7 @@ const AdminBuildingAssignments: React.FC = () => {
             Admin Building Assignments
           </h2>
           <p className="text-muted-foreground">
-            Manage which buildings each admin is responsible for
+            Manage which buildings each admin is responsible for. Buildings can have multiple admins.
           </p>
         </div>
 
@@ -215,27 +231,17 @@ const AdminBuildingAssignments: React.FC = () => {
               <DialogTitle>Assign Admin to Building</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Building Selection First */}
               <div>
-                <Label htmlFor="admin">Select Admin</Label>
-                <Select value={selectedAdmin} onValueChange={setSelectedAdmin}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose an admin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {admins.map((admin) => (
-                      <SelectItem key={admin.id} value={admin.id.toString()}>
-                        {admin.name} ({admin.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="building">Select Building</Label>
+                <Label htmlFor="building">
+                  Select Building <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={selectedBuilding}
-                  onValueChange={setSelectedBuilding}
+                  onValueChange={(value) => {
+                    setSelectedBuilding(value);
+                    setSelectedAdmin(""); // Reset admin when building changes
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a building" />
@@ -248,16 +254,68 @@ const AdminBuildingAssignments: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedBuilding && adminsForSelectedBuilding.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This building currently has {adminsForSelectedBuilding.length} admin(s) assigned
+                  </p>
+                )}
+              </div>
+
+              {/* Admin Selection Second (only after building is selected) */}
+              <div>
+                <Label htmlFor="admin">
+                  Select Admin <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={selectedAdmin}
+                  onValueChange={setSelectedAdmin}
+                  disabled={!selectedBuilding}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        selectedBuilding
+                          ? "Choose an admin for this building"
+                          : "Select a building first"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableAdmins.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground text-center">
+                        No available admins
+                      </div>
+                    ) : (
+                      availableAdmins.map((admin) => (
+                        <SelectItem key={admin.id} value={admin.id}>
+                          {admin.name} ({admin.email})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {selectedBuilding && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {availableAdmins.length} admin(s) available for this building
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end space-x-2">
                 <Button
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setSelectedAdmin("");
+                    setSelectedBuilding("");
+                  }}
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleAssignAdmin} disabled={loading}>
+                <Button
+                  onClick={handleAssignAdmin}
+                  disabled={loading || !selectedBuilding || !selectedAdmin}
+                >
                   {loading ? "Assigning..." : "Assign"}
                 </Button>
               </div>

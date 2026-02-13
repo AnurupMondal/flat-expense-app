@@ -41,6 +41,8 @@ async function apiCall<T>(
   }
 }
 
+import { mapApiComplaintsToComplaints } from "./complaintMapper";
+
 // Import types
 import type {
   User,
@@ -171,8 +173,8 @@ export const usersApi = {
     return result.success ? result.data!.pendingUsers : [];
   },
 
-  async create(userData: Partial<User>): Promise<User | null> {
-    const result = await apiCall<{ user: User }>("/auth/register", {
+  async create(userData: Partial<User> & { password?: string }): Promise<User | null> {
+    const result = await apiCall<{ user: User }>("/users", {
       method: "POST",
       body: JSON.stringify(userData),
     });
@@ -184,7 +186,15 @@ export const usersApi = {
 export const buildingsApi = {
   async getAll(): Promise<Building[]> {
     const result = await apiCall<{ buildings: Building[] }>("/buildings");
-    return result.success ? result.data!.buildings : [];
+    if (result.success && result.data?.buildings) {
+      return result.data.buildings.map((b: any) => ({
+        ...b,
+        totalUnits: b.total_units || b.totalUnits,
+        adminId: b.admin_id || b.adminId,
+        createdAt: b.created_at || b.createdAt,
+      }));
+    }
+    return [];
   },
 
   async create(
@@ -201,8 +211,28 @@ export const buildingsApi = {
 // Bills API
 export const billsApi = {
   async getAll(): Promise<Bill[]> {
-    const result = await apiCall<{ bills: Bill[] }>("/bills");
-    return result.success ? result.data!.bills : [];
+    const result = await apiCall<{ bills: any[] }>("/bills");
+    if (result.success && Array.isArray(result.data?.bills)) {
+      return result.data.bills.map((b) => {
+        if (!b) return null; // Safety check
+        const dueDate = new Date(b.due_date || b.dueDate);
+        const isValidDate = !isNaN(dueDate.getTime());
+
+        return {
+          ...b,
+          userId: b.user_id || b.userId,
+          buildingId: b.building_id || b.buildingId,
+          totalAmount: Number(b.amount || b.totalAmount || b.total_amount || 0),
+          dueDate: isValidDate ? b.due_date : new Date().toISOString(),
+          status: b.status,
+          month: isValidDate ? dueDate.toLocaleString('en-US', { month: 'long' }) : 'Unknown',
+          year: isValidDate ? dueDate.getFullYear() : new Date().getFullYear(),
+          rentAmount: b.type === 'rent' ? Number(b.amount || 0) : 0,
+          maintenanceAmount: b.type === 'maintenance' ? Number(b.amount || 0) : 0,
+        } as Bill;
+      }).filter(Boolean) as Bill[];
+    }
+    return [];
   },
 
   async getById(id: string): Promise<Bill | null> {
@@ -250,8 +280,23 @@ export const billsApi = {
 // Complaints API
 export const complaintsApi = {
   async getAll(): Promise<Complaint[]> {
-    const result = await apiCall<{ complaints: Complaint[] }>("/complaints");
-    return result.success ? result.data!.complaints : [];
+    console.log("🔍 complaintsApi.getAll() called");
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    console.log("🔍 Token available:", !!token);
+
+    const result = await apiCall<{ complaints: any[] }>("/complaints");
+    console.log("🔍 complaintsApi result:", result);
+
+    if (result.success && result.data?.complaints) {
+      const mappedComplaints = mapApiComplaintsToComplaints(
+        result.data.complaints
+      );
+      console.log("🔍 Mapped complaints:", mappedComplaints);
+      return mappedComplaints;
+    }
+    console.log("🔍 Returning empty array from complaintsApi");
+    return [];
   },
 
   async create(complaintData: {
@@ -287,6 +332,17 @@ export const complaintsApi = {
       {
         method: "PATCH",
         body: JSON.stringify({ status, response }),
+      }
+    );
+    return result.success ? result.data!.complaint : null;
+  },
+
+  async assign(id: string, assignedTo: string | null): Promise<Complaint | null> {
+    const result = await apiCall<{ complaint: Complaint }>(
+      `/complaints/${id}/assign`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ assignedTo }),
       }
     );
     return result.success ? result.data!.complaint : null;
@@ -395,24 +451,24 @@ export const adminAssignmentsApi = {
     return apiCall("/admin-assignments/available-admins", { method: "GET" });
   },
 
-  getAdminBuildings: async (adminId: number) => {
+  getAdminBuildings: async (adminId: string) => {
     return apiCall(`/admin-assignments/admin/${adminId}`, { method: "GET" });
   },
 
-  assignAdmin: async (adminId: number, buildingId: number) => {
+  assignAdmin: async (adminId: string, buildingId: string) => {
     return apiCall("/admin-assignments", {
       method: "POST",
       body: JSON.stringify({ adminId, buildingId }),
     });
   },
 
-  removeAssignment: async (assignmentId: number) => {
+  removeAssignment: async (assignmentId: string) => {
     return apiCall(`/admin-assignments/${assignmentId}`, {
       method: "DELETE",
     });
   },
 
-  bulkAssignAdmin: async (adminId: number, buildingIds: number[]) => {
+  bulkAssignAdmin: async (adminId: string, buildingIds: string[]) => {
     return apiCall("/admin-assignments/bulk", {
       method: "POST",
       body: JSON.stringify({ adminId, buildingIds }),

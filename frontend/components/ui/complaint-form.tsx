@@ -46,7 +46,7 @@ const PRIORITY_LEVELS = [
   { value: "medium", label: "Medium", description: "Moderate urgency" },
   { value: "high", label: "High", description: "Urgent attention needed" },
   {
-    value: "emergency",
+    value: "urgent",
     label: "Emergency",
     description: "Immediate action required",
   },
@@ -61,7 +61,7 @@ export function ComplaintForm({
   const [formData, setFormData] = useState({
     category: "",
     description: "",
-    priority: "medium" as "low" | "medium" | "high" | "emergency",
+    priority: "medium" as "low" | "medium" | "high" | "urgent",
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -145,7 +145,7 @@ export function ComplaintForm({
               <Select
                 value={formData.priority}
                 onValueChange={(
-                  value: "low" | "medium" | "high" | "emergency"
+                  value: "low" | "medium" | "high" | "urgent"
                 ) => setFormData((prev) => ({ ...prev, priority: value }))}
               >
                 <SelectTrigger>

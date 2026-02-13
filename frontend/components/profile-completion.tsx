@@ -71,11 +71,8 @@ export default function ProfileCompletion({
         phone: "Phone Number",
       };
 
-      if (user.role === "admin" || user.role === "resident") {
-        requiredFields.buildingId = "Building";
-      }
-
       if (user.role === "resident") {
+        requiredFields.buildingId = "Building";
         requiredFields.flatNumber = "Flat Number";
       }
 
@@ -235,7 +232,7 @@ export default function ProfileCompletion({
                 </div>
               </div>
 
-              {(user.role === "admin" || user.role === "resident") && (
+              {user.role === "resident" && (
                 <div className="space-y-2">
                   <Label htmlFor="building">
                     Building <span className="text-red-500">*</span>

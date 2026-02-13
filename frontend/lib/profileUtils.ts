@@ -24,7 +24,7 @@ export function checkProfileCompletion(user: User): ProfileCompletionResult {
     Array<{ key: string; label: string }>
   > = {
     "super-admin": [],
-    admin: [{ key: "buildingId", label: "Building Assignment" }],
+    admin: [], // Admins get building assignments through admin_building_assignments table
     resident: [
       { key: "buildingId", label: "Building Assignment" },
       { key: "flatNumber", label: "Flat Number" },

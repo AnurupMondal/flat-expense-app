@@ -5,14 +5,15 @@ import { DashboardLayout } from "@/components/ui/dashboard-layout";
 import { DashboardHeader } from "@/components/ui/dashboard-header";
 import { StatsGrid } from "@/components/ui/stats-grid";
 import { QuickActions } from "@/components/ui/quick-actions";
-import { ApprovalList } from "@/components/ui/approval-list";
+
 import { ComplaintManagement } from "@/components/ui/complaint-management";
+import ComplaintsManagement from "@/components/ui/complaints-management";
 import { UserCard } from "@/components/ui/user-card";
 import { UserManagement } from "@/components/ui/user-management";
 import { ProfileManager } from "@/components/ui/profile-manager";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { usersApi } from "@/lib/api";
+import { usersApi, complaintsApi } from "@/lib/api";
 import {
   Building2,
   Users,
@@ -72,9 +73,9 @@ export default function AdminDashboard({
   const approvedResidents = buildingResidents.filter(
     (u) => u.status === "approved"
   );
-  const buildingComplaints = complaints.filter(
-    (c) => c.buildingId === currentUser.buildingId
-  );
+  // Backend already filters complaints based on admin assignments
+  const buildingComplaints = complaints;
+
   const buildingBills = bills.filter(
     (b) => b.buildingId === currentUser.buildingId
   );
@@ -217,24 +218,72 @@ export default function AdminDashboard({
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleUpdateComplaint = (
+  const handleUpdateComplaint = async (
     complaintId: string,
     updates: Partial<Complaint>
   ) => {
-    const updatedComplaints = complaints.map((complaint) =>
-      complaint.id === complaintId ? { ...complaint, ...updates } : complaint
-    );
-    onUpdateComplaints(updatedComplaints);
-    setMessage({ type: "success", text: "Complaint updated successfully" });
-    setTimeout(() => setMessage(null), 3000);
+    try {
+      setIsLoading(true);
+
+      let updatedComplaint;
+
+      if ('assignedTo' in updates) {
+        updatedComplaint = await complaintsApi.assign(
+          complaintId,
+          updates.assignedTo || null
+        );
+      } else {
+        updatedComplaint = await complaintsApi.updateStatus(
+          complaintId,
+          updates.status!,
+          updates.adminResponse
+        );
+      }
+
+      if (updatedComplaint) {
+        const updatedComplaints = complaints.map((complaint) =>
+          complaint.id === complaintId
+            ? { ...complaint, ...updates }
+            : complaint
+        );
+        onUpdateComplaints(updatedComplaints);
+        setMessage({ type: "success", text: "Complaint updated successfully" });
+      } else {
+        setMessage({ type: "error", text: "Failed to update complaint" });
+      }
+    } catch (error) {
+      console.error("Error updating complaint:", error);
+      setMessage({ type: "error", text: "Failed to update complaint" });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleDeleteComplaint = async (complaintId: string) => {
+    try {
+      setIsLoading(true);
+      // Assuming we have a delete API method
+      // await complaintsApi.delete(complaintId);
+
+      const updatedComplaints = complaints.filter(
+        (complaint) => complaint.id !== complaintId
+      );
+      onUpdateComplaints(updatedComplaints);
+      setMessage({ type: "success", text: "Complaint deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting complaint:", error);
+      setMessage({ type: "error", text: "Failed to delete complaint" });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
   const getBreadcrumbTitle = () => {
     switch (activeView) {
       case "overview":
         return "Dashboard Overview";
-      case "approvals":
-        return "Resident Approvals";
       case "residents":
         return "User Management";
       case "complaints":
@@ -260,27 +309,6 @@ export default function AdminDashboard({
           </>
         );
 
-      case "approvals":
-        return (
-          <>
-            <DashboardHeader
-              title="Resident Approvals"
-              description="Review and approve new resident registrations"
-            >
-              <Badge variant="secondary">
-                {pendingResidents.length} pending
-              </Badge>
-            </DashboardHeader>
-            <ApprovalList
-              users={pendingResidents}
-              buildings={buildings}
-              onApprove={handleApproveResident}
-              onReject={handleRejectResident}
-              title="Pending Resident Approvals"
-            />
-          </>
-        );
-
       case "residents":
         return (
           <>
@@ -299,15 +327,12 @@ export default function AdminDashboard({
       case "complaints":
         return (
           <>
-            <DashboardHeader
-              title="Complaint Management"
-              description="View and manage building complaints"
-            />
-            <ComplaintManagement
+            <ComplaintsManagement
+              currentUser={currentUser}
               complaints={buildingComplaints}
               users={users}
               onUpdateComplaint={handleUpdateComplaint}
-              currentUser={currentUser}
+            // onDeleteComplaint={handleDeleteComplaint} // Temporarily disabled until API supports it
             />
           </>
         );
@@ -352,11 +377,10 @@ export default function AdminDashboard({
     >
       {message && (
         <Alert
-          className={`mb-6 ${
-            message.type === "error"
-              ? "border-red-200 bg-red-50"
-              : "border-green-200 bg-green-50"
-          }`}
+          className={`mb-6 ${message.type === "error"
+            ? "border-red-200 bg-red-50"
+            : "border-green-200 bg-green-50"
+            }`}
         >
           <AlertDescription
             className={

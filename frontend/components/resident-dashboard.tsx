@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/ui/dashboard-layout";
 import { DashboardHeader } from "@/components/ui/dashboard-header";
 import { QuickActions } from "@/components/ui/quick-actions";
+import { ComplaintHistory } from "@/components/ui/complaint-history";
 import { ComplaintCard } from "@/components/ui/complaint-card";
 import { ComplaintForm } from "@/components/ui/complaint-form";
 import { BillCard } from "@/components/ui/bill-card";
@@ -290,36 +291,10 @@ export default function ResidentDashboard({
               </Button>
             </DashboardHeader>
 
-            {userComplaints.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    No complaints submitted yet
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Have an issue in your building? Submit a complaint and track
-                    its progress.
-                  </p>
-                  <Button
-                    className="bg-orange-600 hover:bg-orange-700"
-                    onClick={() => setActiveView("submit-complaint")}
-                  >
-                    Submit Your First Complaint
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {userComplaints.map((complaint) => (
-                  <ComplaintCard
-                    key={complaint.id}
-                    complaint={complaint}
-                    user={currentUser}
-                  />
-                ))}
-              </div>
-            )}
+            <ComplaintHistory
+              currentUser={currentUser}
+              complaints={complaints}
+            />
           </div>
         );
 

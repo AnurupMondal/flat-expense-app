@@ -79,9 +79,8 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
     const total = parseInt(countResult.rows[0].count);
 
     // Add pagination and sorting
-    query += ` ORDER BY c.created_at DESC LIMIT $${paramCount + 1} OFFSET $${
-      paramCount + 2
-    }`;
+    query += ` ORDER BY c.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2
+      }`;
     values.push(limit, offset);
 
     const result = await pool.query(query, values);
@@ -127,14 +126,31 @@ router.post(
         return;
       }
 
-      // Get user's building ID
+      // Get user's building ID and check for assigned admin
       const userQuery = "SELECT building_id FROM users WHERE id = $1";
       const userResult = await pool.query(userQuery, [user.userId]);
       const buildingId = userResult.rows[0]?.building_id;
 
+      // Find active admin for this building
+      let assignedTo = null;
+      let status = 'submitted';
+
+      if (buildingId) {
+        const adminQuery = `
+          SELECT admin_id FROM admin_building_assignments 
+          WHERE building_id = $1 AND is_active = true
+          LIMIT 1
+        `;
+        const adminResult = await pool.query(adminQuery, [buildingId]);
+        if (adminResult.rows.length > 0) {
+          assignedTo = adminResult.rows[0].admin_id;
+          status = 'assigned';
+        }
+      }
+
       const query = `
-      INSERT INTO complaints (user_id, building_id, category, description, priority, status, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, 'submitted', NOW(), NOW())
+      INSERT INTO complaints (user_id, building_id, category, description, priority, status, assigned_to, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
       RETURNING *
     `;
 
@@ -144,6 +160,8 @@ router.post(
         type, // This maps to 'category' in the schema
         description,
         priority,
+        status,
+        assignedTo
       ];
 
       const result = await pool.query(query, values);
@@ -169,6 +187,65 @@ router.post(
       res.status(500).json({
         success: false,
         error: "Server error while creating complaint",
+      });
+    }
+  }
+);
+
+// Update complaint assignment (admin/super-admin only)
+router.patch(
+  "/:id/assign",
+  authenticate,
+  authorize("admin", "super-admin"),
+  async (req: AuthenticatedRequest, res): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { assignedTo } = req.body;
+      const user = req.user!;
+
+      // For admins, ensure they can only update complaints in their assigned buildings
+      let whereClause = "WHERE id = $1";
+      let values: any[] = [id];
+
+      if (user.role === "admin") {
+        whereClause += ` AND building_id IN (
+          SELECT building_id FROM admin_building_assignments 
+          WHERE admin_id = $2 AND is_active = true
+        )`;
+        values.push(user.userId);
+      }
+
+      const query = `
+      UPDATE complaints 
+      SET assigned_to = $${values.length + 1}, 
+          status = 'assigned',
+          updated_at = NOW()
+      ${whereClause}
+      RETURNING *
+    `;
+
+      values.push(assignedTo || null);
+
+      const result = await pool.query(query, values);
+
+      if (result.rows.length === 0) {
+        res.status(404).json({
+          success: false,
+          error:
+            "Complaint not found or you don't have permission to update it",
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: { complaint: result.rows[0] },
+      });
+    } catch (error) {
+      console.error("Update complaint assignment error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Server error while updating complaint assignment",
       });
     }
   }

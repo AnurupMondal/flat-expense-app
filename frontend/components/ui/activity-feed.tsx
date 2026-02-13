@@ -27,13 +27,13 @@ export function ActivityFeed({
   const getActivityColor = (type: string) => {
     switch (type) {
       case "success":
-        return "bg-green-50";
+        return "bg-green-500/10 text-green-700 dark:text-green-300";
       case "warning":
-        return "bg-orange-50";
+        return "bg-orange-500/10 text-orange-700 dark:text-orange-300";
       case "error":
-        return "bg-red-50";
+        return "bg-red-500/10 text-red-700 dark:text-red-300";
       default:
-        return "bg-blue-50";
+        return "bg-blue-500/10 text-blue-700 dark:text-blue-300";
     }
   };
 
