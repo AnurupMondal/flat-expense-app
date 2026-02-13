@@ -11,6 +11,8 @@ import ComplaintsManagement from "@/components/ui/complaints-management";
 import { UserCard } from "@/components/ui/user-card";
 import { UserManagement } from "@/components/ui/user-management";
 import { ProfileManager } from "@/components/ui/profile-manager";
+import { Broadcaster } from "@/components/ui/broadcaster";
+import { CommunityBoard } from "@/components/ui/community-board";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { usersApi, complaintsApi } from "@/lib/api";
@@ -21,6 +23,8 @@ import {
   AlertTriangle,
   Receipt,
   Send,
+  Megaphone,
+  MessageSquare,
 } from "lucide-react";
 import type {
   User,
@@ -141,16 +145,22 @@ export default function AdminDashboard({
       className: "bg-green-600 hover:bg-green-700",
     },
     {
-      title: "Send Reminders",
-      icon: Send,
-      onClick: () => setActiveView("reminders"),
+      title: "View Complaints",
+      icon: AlertTriangle,
+      onClick: () => setActiveView("complaints"),
       variant: "outline" as const,
       className: "bg-transparent",
     },
     {
-      title: "View Complaints",
-      icon: AlertTriangle,
-      onClick: () => setActiveView("complaints"),
+      title: "Broadcast Alert",
+      icon: Megaphone,
+      onClick: () => setActiveView("broadcaster"),
+      className: "bg-blue-600 hover:bg-blue-700",
+    },
+    {
+      title: "Community Board",
+      icon: MessageSquare,
+      onClick: () => setActiveView("community"),
       variant: "outline" as const,
       className: "bg-transparent",
     },
@@ -290,6 +300,10 @@ export default function AdminDashboard({
         return "Complaint Management";
       case "profile":
         return "Profile";
+      case "broadcaster":
+        return "Emergency Broadcaster";
+      case "community":
+        return "Community Board";
       default:
         return "Dashboard";
     }
@@ -313,7 +327,7 @@ export default function AdminDashboard({
         return (
           <>
             <UserManagement
-              users={users}
+              users={buildingResidents}
               buildings={buildings}
               currentUser={currentUser}
               onUpdateUser={handleUpdateUser}
@@ -351,6 +365,28 @@ export default function AdminDashboard({
                 console.log("Profile updated:", updates);
               }}
             />
+          </>
+        );
+
+      case "broadcaster":
+        return (
+          <>
+            <DashboardHeader
+              title="Announcement Board"
+              description="Send urgent alerts to all residents"
+            />
+            <Broadcaster currentUser={currentUser} />
+          </>
+        );
+
+      case "community":
+        return (
+          <>
+            <DashboardHeader
+              title="Community Board"
+              description="Social wall for building residents"
+            />
+            <CommunityBoard currentUser={currentUser} />
           </>
         );
 

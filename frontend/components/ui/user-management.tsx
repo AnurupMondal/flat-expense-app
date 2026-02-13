@@ -106,9 +106,7 @@ export function UserManagement({
     // Super admins can see all users, admins can only see their building users
     if (currentUser.role === "admin") {
       filteredUsers = users.filter(
-        (user) =>
-          user.buildingId === currentUser.buildingId ||
-          user.role === "super-admin"
+        (user) => user.buildingId === currentUser.buildingId
       );
     }
 
@@ -406,8 +404,12 @@ export function UserManagement({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="resident">Resident</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="super-admin">Super Admin</SelectItem>
+                      {currentUser.role === "super-admin" && (
+                        <>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="super-admin">Super Admin</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -492,8 +494,12 @@ export function UserManagement({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="super-admin">Super Admin</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  {currentUser.role === "super-admin" && (
+                    <>
+                      <SelectItem value="super-admin">Super Admin</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </>
+                  )}
                   <SelectItem value="resident">Resident</SelectItem>
                 </SelectContent>
               </Select>

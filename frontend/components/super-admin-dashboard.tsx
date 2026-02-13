@@ -13,6 +13,8 @@ import { UserCard } from "@/components/ui/user-card";
 import { UserManagement } from "@/components/ui/user-management";
 import { ProfileManager } from "@/components/ui/profile-manager";
 import ComplaintsManagement from "@/components/ui/complaints-management";
+import { Broadcaster } from "@/components/ui/broadcaster";
+import { CommunityBoard } from "@/components/ui/community-board";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -308,6 +310,10 @@ export default function SuperAdminDashboard({
         return "Data Export";
       case "profile":
         return "Profile";
+      case "broadcaster":
+        return "Announcement Board";
+      case "community":
+        return "Community Board";
       default:
         return "Dashboard";
     }
@@ -441,6 +447,27 @@ export default function SuperAdminDashboard({
                 console.log("Profile updated:", updates);
               }}
             />
+          </>
+        );
+      case "broadcaster":
+        return (
+          <>
+            <DashboardHeader
+              title="Announcement Board"
+              description="Send urgent alerts to all residents globally"
+            />
+            <Broadcaster currentUser={currentUser} />
+          </>
+        );
+
+      case "community":
+        return (
+          <>
+            <DashboardHeader
+              title="Community Board"
+              description="Global community wall"
+            />
+            <CommunityBoard currentUser={currentUser} />
           </>
         );
 

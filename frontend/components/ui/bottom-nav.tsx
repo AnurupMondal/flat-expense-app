@@ -12,7 +12,9 @@ import {
     Bell,
     User as UserIcon,
     BarChart3,
-    FileText
+    FileText,
+    Megaphone,
+    MessageSquare,
 } from "lucide-react";
 import type { User } from "@/types/app-types";
 
@@ -45,6 +47,8 @@ export function BottomNav({
                         badge: pendingCount > 0 ? pendingCount : undefined
                     },
                     { title: "Reports", icon: DollarSign, id: "reports" },
+                    { title: "Announce", icon: Megaphone, id: "broadcaster" },
+                    { title: "Community", icon: MessageSquare, id: "community" },
                     { title: "Settings", icon: Settings, id: "settings" },
                 ];
 
@@ -59,6 +63,8 @@ export function BottomNav({
                     },
                     { title: "Bills", icon: Receipt, id: "bills" },
                     { title: "Buildings", icon: Building2, id: "buildings" },
+                    { title: "Announce", icon: Megaphone, id: "broadcaster" },
+                    { title: "Community", icon: MessageSquare, id: "community" },
                     { title: "Profile", icon: UserIcon, id: "profile" },
                 ];
 
@@ -73,6 +79,7 @@ export function BottomNav({
                         badge: notificationCount > 0 ? notificationCount : undefined
                     },
                     { title: "Notifications", icon: Bell, id: "notifications" },
+                    { title: "Community", icon: MessageSquare, id: "community" },
                     { title: "Profile", icon: UserIcon, id: "profile" },
                 ];
 

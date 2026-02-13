@@ -1,17 +1,20 @@
+import dotenv from "dotenv";
+dotenv.config();
 
 import { pool } from "../config/database";
 import logger from "../utils/logger";
 import DemoDataCreator from "./create-demo-users";
 
 export async function resetDatabase() {
-    const client = await pool.connect();
+  const client = await pool.connect();
 
-    try {
-        logger.info("🗑️ Starting database reset...");
+  try {
+    logger.info("🗑️ Starting database reset...");
 
-        // Drop all tables
-        // We cascade to handle dependencies
-        await client.query(`
+    // Drop all tables
+    // We cascade to handle dependencies
+    await client.query(`
+      DROP TABLE IF EXISTS community_posts CASCADE;
       DROP TABLE IF EXISTS complaint_updates CASCADE;
       DROP TABLE IF EXISTS complaints CASCADE;
       DROP TABLE IF EXISTS notifications CASCADE;
@@ -23,13 +26,13 @@ export async function resetDatabase() {
       DROP TABLE IF EXISTS buildings CASCADE;
     `);
 
-        logger.info("✅ All tables dropped successfully");
+    logger.info("✅ All tables dropped successfully");
 
-        // Recreate tables
-        // Buildings
-        await client.query(`
+    // Recreate tables
+    // Buildings
+    await client.query(`
       CREATE TABLE IF NOT EXISTS buildings (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         name VARCHAR(255) NOT NULL,
         address TEXT NOT NULL,
         total_units INTEGER NOT NULL DEFAULT 0,
@@ -39,10 +42,10 @@ export async function resetDatabase() {
       );
     `);
 
-        // Users
-        await client.query(`
+    // Users
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
@@ -60,17 +63,17 @@ export async function resetDatabase() {
       );
     `);
 
-        // Add foreign key for admin_id in buildings after users table exists
-        await client.query(`
+    // Add foreign key for admin_id in buildings after users table exists
+    await client.query(`
       ALTER TABLE buildings 
       ADD CONSTRAINT fk_building_admin 
       FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL;
     `);
 
-        // User Sessions
-        await client.query(`
+    // User Sessions
+    await client.query(`
       CREATE TABLE IF NOT EXISTS user_sessions (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         token_hash VARCHAR(255) NOT NULL,
         expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -78,10 +81,10 @@ export async function resetDatabase() {
       );
     `);
 
-        // Admin Building Assignments
-        await client.query(`
+    // Admin Building Assignments
+    await client.query(`
       CREATE TABLE IF NOT EXISTS admin_building_assignments (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         building_id UUID NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
         assigned_by UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -92,10 +95,10 @@ export async function resetDatabase() {
       );
     `);
 
-        // Complaints
-        await client.query(`
+    // Complaints
+    await client.query(`
       CREATE TABLE IF NOT EXISTS complaints (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         title VARCHAR(255) NOT NULL,
         description TEXT NOT NULL,
         category VARCHAR(50) NOT NULL,
@@ -109,10 +112,10 @@ export async function resetDatabase() {
       );
     `);
 
-        // Complaint Updates
-        await client.query(`
+    // Complaint Updates
+    await client.query(`
       CREATE TABLE IF NOT EXISTS complaint_updates (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         complaint_id UUID NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
         status VARCHAR(50) NOT NULL,
         note TEXT,
@@ -121,10 +124,10 @@ export async function resetDatabase() {
       );
     `);
 
-        // Bills
-        await client.query(`
+    // Bills
+    await client.query(`
       CREATE TABLE IF NOT EXISTS bills (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         title VARCHAR(255) NOT NULL,
         description TEXT,
         amount DECIMAL(10, 2) NOT NULL,
@@ -139,10 +142,10 @@ export async function resetDatabase() {
       );
     `);
 
-        // Bill Items
-        await client.query(`
+    // Bill Items
+    await client.query(`
       CREATE TABLE IF NOT EXISTS bill_items (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         bill_id UUID NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
         description VARCHAR(255) NOT NULL,
         amount DECIMAL(10, 2) NOT NULL,
@@ -150,38 +153,56 @@ export async function resetDatabase() {
       );
     `);
 
-        // Notifications
-        await client.query(`
+    // Notifications
+    await client.query(`
       CREATE TABLE IF NOT EXISTS notifications (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        building_id UUID REFERENCES buildings(id) ON DELETE CASCADE,
         title VARCHAR(255) NOT NULL,
         message TEXT NOT NULL,
         type VARCHAR(50) DEFAULT 'info',
-        is_read BOOLEAN DEFAULT false,
+        urgent BOOLEAN DEFAULT false,
+        read BOOLEAN DEFAULT false,
+        data JSONB,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-        logger.info("✅ All tables recreated successfully");
+    // Community Posts
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS community_posts (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        building_id UUID NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        attachments TEXT[],
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
-        // Run demo data creator
-        logger.info("🌱 Seeding database with demo data...");
-        const creator = new DemoDataCreator();
-        await creator.run();
+    logger.info("✅ All tables recreated successfully");
 
-        logger.info("✨ Database reset and seeding completed successfully!");
-    } catch (error) {
-        logger.error("❌ Database reset failed:", error);
-        throw error;
-    } finally {
-        client.release();
-    }
+    // Run demo data creator
+    logger.info("🌱 Seeding database with demo data...");
+    const creator = new DemoDataCreator();
+    await creator.run();
+
+    logger.info("✨ Database reset and seeding completed successfully!");
+  } catch (error) {
+    logger.error("❌ Database reset failed:", error);
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 // Allow running directly
 if (require.main === module) {
-    resetDatabase()
-        .then(() => process.exit(0))
-        .catch(() => process.exit(1));
+  resetDatabase()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
 }

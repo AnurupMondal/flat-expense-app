@@ -371,15 +371,18 @@ export const notificationsApi = {
     title: string;
     message: string;
     type?: string;
-  }): Promise<Notification | null> {
-    const result = await apiCall<{ notification: Notification }>(
-      "/notifications",
-      {
-        method: "POST",
-        body: JSON.stringify(notificationData),
-      }
-    );
-    return result.success ? result.data!.notification : null;
+    urgent?: boolean;
+    sendEmail?: boolean;
+  }): Promise<{ notification?: Notification; notifications?: Notification[]; count?: number } | null> {
+    const result = await apiCall<{
+      notification?: Notification;
+      notifications?: Notification[];
+      count?: number;
+    }>("/notifications", {
+      method: "POST",
+      body: JSON.stringify(notificationData),
+    });
+    return result.success ? result.data! : null;
   },
 
   async markAsRead(id: string): Promise<Notification | null> {
@@ -407,6 +410,34 @@ export const notificationsApi = {
       "/notifications/unread-count"
     );
     return result.success ? result.data!.unreadCount : 0;
+  },
+};
+
+// Community API
+export const communityApi = {
+  async getAll(): Promise<any[]> {
+    const result = await apiCall<{ posts: any[] }>("/community");
+    return result.success ? result.data!.posts : [];
+  },
+
+  async create(postData: {
+    title: string;
+    content: string;
+    category: string;
+    attachments?: string[];
+  }): Promise<any | null> {
+    const result = await apiCall<{ post: any }>("/community", {
+      method: "POST",
+      body: JSON.stringify(postData),
+    });
+    return result.success ? result.data!.post : null;
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const result = await apiCall<{ success: boolean }>(`/community/${id}`, {
+      method: "DELETE",
+    });
+    return result.success;
   },
 };
 

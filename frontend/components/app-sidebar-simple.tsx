@@ -19,6 +19,8 @@ import {
   FileText,
   MoreHorizontal,
   User as UserIcon,
+  MessageSquare,
+  Megaphone,
 } from "lucide-react";
 import type { User } from "@/types/app-types";
 
@@ -62,7 +64,14 @@ export default function AppSidebar({
                 id: "users",
                 badge: pendingCount > 0 ? pendingCount.toString() : undefined,
               },
+              { title: "Announcement Board", icon: Megaphone, id: "broadcaster" },
               { title: "System Settings", icon: Settings, id: "settings" },
+            ],
+          },
+          {
+            title: "Community",
+            items: [
+              { title: "Community Board", icon: MessageSquare, id: "community" },
             ],
           },
           {
@@ -101,9 +110,15 @@ export default function AppSidebar({
           {
             title: "Building Management",
             items: [
-              { title: "Buildings", icon: Building2, id: "buildings" },
               { title: "Bills", icon: Receipt, id: "bills" },
               { title: "Complaints", icon: AlertTriangle, id: "complaints" },
+              { title: "Announcement Board", icon: Megaphone, id: "broadcaster" },
+            ],
+          },
+          {
+            title: "Community",
+            items: [
+              { title: "Community Board", icon: MessageSquare, id: "community" },
             ],
           },
           {

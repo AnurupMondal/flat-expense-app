@@ -146,12 +146,19 @@ router.post(
         const targetBuildingId = userBuildingResult.rows[0]?.building_id;
 
         const query = `
-        INSERT INTO notifications (user_id, building_id, title, message, type, read, created_at)
-        VALUES ($1, $2, $3, $4, $5, false, NOW())
+        INSERT INTO notifications (user_id, building_id, title, message, type, urgent, read, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, false, NOW())
         RETURNING *
       `;
 
-        const values = [userId, targetBuildingId, title, message, type];
+        const values = [
+          userId,
+          targetBuildingId,
+          title,
+          message,
+          type,
+          req.body.urgent || false,
+        ];
         const result = await pool.query(query, values);
 
         res.status(201).json({
@@ -184,22 +191,26 @@ router.post(
         }
 
         // Create notifications for all users
-        const notifications = [];
-        for (const user of usersResult.rows) {
-          const query = `
-          INSERT INTO notifications (user_id, building_id, title, message, type, read, created_at)
-          VALUES ($1, $2, $3, $4, $5, false, NOW())
+        const query = `
+          INSERT INTO notifications (user_id, building_id, title, message, type, urgent, read, created_at)
+          SELECT id, building_id, $1, $2, $3, $4, false, NOW()
+          FROM users
+          WHERE building_id = $5 AND status = 'approved'
           RETURNING *
         `;
 
-          const values = [user.id, buildingId, title, message, type];
-          const result = await pool.query(query, values);
-          notifications.push(result.rows[0]);
-        }
+        const values = [
+          title,
+          message,
+          type,
+          req.body.urgent || false,
+          buildingId,
+        ];
+        const result = await pool.query(query, values);
 
         res.status(201).json({
           success: true,
-          data: { notifications, count: notifications.length },
+          data: { notifications: result.rows, count: result.rows.length },
         });
       } else {
         res.status(400).json({

@@ -23,6 +23,7 @@ import notificationRoutes from "./routes/notifications";
 import analyticsRoutes from "./routes/analytics";
 import uploadRoutes from "./routes/upload";
 import adminAssignmentRoutes from "./routes/admin-assignments";
+import communityRoutes from "./routes/community";
 
 // Load environment variables
 dotenv.config();
@@ -131,6 +132,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/admin-assignments", adminAssignmentRoutes);
+app.use("/api/community", communityRoutes);
 
 // Serve uploaded files
 app.use("/uploads", express.static("uploads"));

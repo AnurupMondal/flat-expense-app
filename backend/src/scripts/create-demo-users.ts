@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { pool } from "../config/database";
@@ -226,6 +229,7 @@ class DemoDataCreator {
             `UPDATE buildings SET admin_id = $1, updated_at = NOW() WHERE id = $2`,
             [admin.id, building.id]
           );
+          building.admin_id = admin.id;
 
           // Create admin-building assignment record
           await pool.query(
@@ -324,6 +328,84 @@ class DemoDataCreator {
     }
   }
 
+  async createDemoCommunityPosts(): Promise<void> {
+    const residents = this.users.filter(
+      (u) => u.role === "resident" && u.building_id
+    );
+
+    const postTemplates = [
+      {
+        title: "Found a set of keys",
+        content: "Found a set of keys near the swimming pool area today around 3 PM. Please contact me if they are yours.",
+        category: "Lost & Found",
+      },
+      {
+        title: "Weekend Yoga Session",
+        content: "Anyone interested in a group yoga session this Sunday morning? Location: Roof-top garden.",
+        category: "Event",
+      },
+      {
+        title: "Book Club Meeting",
+        content: "Our monthly book club meeting is scheduled for next Friday. We'll be discussing 'The Great Gatsby'.",
+        category: "General",
+      },
+    ];
+
+    for (let i = 0; i < residents.length && i < postTemplates.length; i++) {
+      const resident = residents[i];
+      const template = postTemplates[i];
+
+      if (!resident || !template) continue;
+
+      try {
+        await pool.query(
+          `INSERT INTO community_posts (id, user_id, building_id, title, content, category, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW() - INTERVAL '2 hours', NOW())`,
+          [
+            uuidv4(),
+            resident.id,
+            resident.building_id,
+            template.title,
+            template.content,
+            template.category,
+          ]
+        );
+        logger.info(`Created community post: ${template.title}`);
+      } catch (error) {
+        logger.error(`Failed to create community post:`, error);
+      }
+    }
+  }
+
+  async createDemoBroadcasts(): Promise<void> {
+    const admins = this.users.filter((u) => u.role === "admin");
+    const buildings = this.buildings;
+
+    for (const admin of admins) {
+      const building = buildings.find((b: any) => b.admin_id === admin.id);
+      if (!building) continue;
+
+      try {
+        // Send an urgent broadcast to all residents in the building
+        await pool.query(
+          `INSERT INTO notifications (id, user_id, building_id, title, message, type, urgent, read, created_at)
+           SELECT uuid_generate_v4(), id, building_id, $1, $2, 'announcement', true, false, NOW()
+           FROM users
+           WHERE building_id = $3 AND status = 'approved'`,
+          [
+            "Water Maintenance Today",
+            "Emergency water maintenance from 2 PM to 4 PM. Please store water in advance.",
+            building.id,
+          ]
+        );
+        logger.info(`Created urgent broadcast for building: ${building.name}`);
+      } catch (error) {
+        logger.error(`Failed to create broadcast:`, error);
+      }
+    }
+  }
+
+
   async createAdminBuildingAssignmentsTable(): Promise<void> {
     try {
       await pool.query(`
@@ -366,6 +448,13 @@ class DemoDataCreator {
       // Create demo complaints
       logger.info("📝 Creating demo complaints...");
       await this.createDemoComplaints();
+
+      // Create community data
+      logger.info("🌐 Creating community posts...");
+      await this.createDemoCommunityPosts();
+
+      logger.info("📢 Creating urgent broadcasts...");
+      await this.createDemoBroadcasts();
 
       logger.info("✅ Demo data creation completed successfully!");
       logger.info("📋 Demo accounts created:");

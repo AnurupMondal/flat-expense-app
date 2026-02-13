@@ -63,76 +63,83 @@ export function NotificationCard({
     return "bg-muted";
   };
 
+  const date = new Date(notification.createdAt);
+  const isValidDate = !isNaN(date.getTime());
+
   return (
     <Card
-      className={`border-0 shadow-sm ${getBgColor(
+      className={`border-0 shadow-sm transition-all hover:shadow-md ${getBgColor(
         notification.urgent,
         notification.read
       )} ${className}`}
     >
       <CardContent className="p-4">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div
               className={`${getTypeColor(
                 notification.type
-              )} flex-shrink-0 mt-0.5`}
+              )} flex-shrink-0 mt-1 p-2 bg-white/50 dark:bg-black/20 rounded-lg`}
             >
               {getTypeIcon(notification.type)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h3
-                  className={`font-semibold ${
-                    notification.urgent
-                      ? "text-destructive"
-                      : notification.read
+                  className={`font-bold text-base ${notification.urgent && !notification.read
+                    ? "text-red-700 dark:text-red-400"
+                    : notification.read
                       ? "text-muted-foreground"
                       : "text-foreground"
-                  }`}
+                    }`}
                 >
                   {notification.title}
                 </h3>
                 {notification.urgent && !notification.read && (
                   <Badge
                     variant="destructive"
-                    className="animate-pulse text-xs"
+                    className="animate-pulse text-[10px] px-1.5 py-0 h-5"
                   >
-                    Urgent
+                    URGENT
                   </Badge>
                 )}
                 {!notification.read && (
-                  <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></div>
                 )}
               </div>
               <p
-                className={`text-sm ${
-                  notification.urgent
-                    ? "text-destructive"
-                    : notification.read
-                    ? "text-muted-foreground"
-                    : "text-foreground"
-                }`}
+                className={`text-sm leading-relaxed ${notification.urgent && !notification.read
+                  ? "text-red-900/80 dark:text-red-300/80 font-medium"
+                  : notification.read
+                    ? "text-muted-foreground/80"
+                    : "text-foreground/90"
+                  }`}
               >
                 {notification.message}
               </p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-muted-foreground">
-                  {notification.createdAt.toLocaleDateString()} at{" "}
-                  {notification.createdAt.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+                  {isValidDate ? (
+                    <>
+                      {date.toLocaleDateString()} •{" "}
+                      {date.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </>
+                  ) : (
+                    "Just now"
+                  )}
                 </span>
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   {!notification.read && onMarkAsRead && (
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
                       onClick={() => onMarkAsRead(notification.id)}
-                      className="text-xs h-6 px-2"
+                      className="text-[11px] h-7 px-3 font-semibold bg-white/50 hover:bg-white dark:bg-black/20 dark:hover:bg-black/40"
                     >
-                      Mark as read
+                      Mark read
                     </Button>
                   )}
                   {onDismiss && (
@@ -140,9 +147,9 @@ export function NotificationCard({
                       variant="ghost"
                       size="sm"
                       onClick={() => onDismiss(notification.id)}
-                      className="text-xs h-6 w-6 p-0"
+                      className="text-muted-foreground hover:text-foreground h-7 w-7 p-0"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-3.5 h-3.5" />
                     </Button>
                   )}
                 </div>

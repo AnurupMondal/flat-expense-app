@@ -11,6 +11,7 @@ import { BillCard } from "@/components/ui/bill-card";
 import { NotificationCard } from "@/components/ui/notification-card";
 import { BuildingInfo } from "@/components/ui/building-info";
 import { ProfileManager } from "@/components/ui/profile-manager";
+import { CommunityBoard } from "@/components/ui/community-board";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,6 +22,7 @@ import {
   Plus,
   Receipt,
   ArrowLeft,
+  MessageSquare,
 } from "lucide-react";
 import { complaintsApi } from "@/lib/api";
 import type {
@@ -93,6 +95,13 @@ export default function ResidentDashboard({
       variant: "outline" as const,
       className: "bg-transparent",
     },
+    {
+      title: "Community Board",
+      icon: MessageSquare,
+      onClick: () => setActiveView("community"),
+      variant: "outline" as const,
+      className: "bg-transparent",
+    },
   ];
 
   const handleSubmitComplaint = async (
@@ -158,6 +167,8 @@ export default function ResidentDashboard({
         return "Building Information";
       case "profile":
         return "Profile";
+      case "community":
+        return "Community Board";
       default:
         return "Dashboard";
     }
@@ -384,6 +395,17 @@ export default function ResidentDashboard({
           </div>
         );
 
+      case "community":
+        return (
+          <div className="space-y-6">
+            <DashboardHeader
+              title="Community Board"
+              description="Social wall for building residents"
+            />
+            <CommunityBoard currentUser={currentUser} />
+          </div>
+        );
+
       default:
         return (
           <div className="text-center py-12">
@@ -407,11 +429,10 @@ export default function ResidentDashboard({
     >
       {message && (
         <Alert
-          className={`mb-6 ${
-            message.type === "error"
+          className={`mb-6 ${message.type === "error"
               ? "border-red-200 bg-red-50"
               : "border-green-200 bg-green-50"
-          }`}
+            }`}
         >
           <AlertDescription
             className={
