@@ -105,24 +105,8 @@ export async function ensureAdminUser() {
       console.log("🏢 Building admin assigned");
     }
 
-    console.log("\n🎉 Demo credentials created successfully!");
-    console.log("┌─────────────────────────────────────────────┐");
-    console.log("│                DEMO CREDENTIALS             │");
-    console.log("├─────────────────────────────────────────────┤");
-    console.log("│ SUPER ADMIN:                                │");
-    console.log("│ 📧 Email: superadmin@flatmanager.com       │");
-    console.log("│ 🔑 Password: superadmin123                  │");
-    console.log("├─────────────────────────────────────────────┤");
-    console.log("│ ADMIN:                                      │");
-    console.log("│ 📧 Email: admin@flatmanager.com            │");
-    console.log("│ 🔑 Password: admin123                      │");
-    console.log("├─────────────────────────────────────────────┤");
-    console.log("│ RESIDENT:                                   │");
-    console.log("│ 📧 Email: resident@flatmanager.com         │");
-    console.log("│ 🔑 Password: resident123                   │");
-    console.log("│ 🏠 Flat: 101                               │");
-    console.log("└─────────────────────────────────────────────┘");
-    console.log("⚠️  Change these default passwords in production!");
+    // console.log("\n🎉 Demo credentials created successfully!");
+    console.log("✅ Demo users check complete");
   } catch (error) {
     console.error("❌ Error ensuring demo users:", error);
   }

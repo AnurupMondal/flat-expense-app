@@ -92,7 +92,7 @@ export function ComplaintsManagement({
       currentUser,
     });
     setComplaints(propComplaints || []);
-  }, [propComplaints]);
+  }, [propComplaints, currentUser]);
 
   // Get status badge color
   const getStatusColor = (status: string) => {

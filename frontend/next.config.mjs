@@ -1,12 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  devIndicators: {
-    buildActivity: false,
-    appIsrStatus: false,
-  },
   output: 'standalone',
+  serverExternalPackages: [],
   experimental: {
-    serverComponentsExternalPackages: [],
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
