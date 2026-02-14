@@ -1,5 +1,6 @@
 import express from "express";
 import { pool } from "../config/database";
+import { validate as uuidValidate } from 'uuid';
 import {
   authenticate,
   authorize,
@@ -204,9 +205,17 @@ router.patch(
   authorize("admin", "super-admin"),
   async (req: AuthenticatedRequest, res): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id;
       const { assignedTo } = req.body;
       const user = req.user!;
+
+      if (!id || !uuidValidate(id)) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid complaint ID format",
+        });
+        return;
+      }
 
       // For admins, ensure they can only update complaints in their assigned buildings
       let whereClause = "WHERE id = $1";
@@ -266,9 +275,17 @@ router.patch(
   authorize("admin", "super-admin"),
   async (req: AuthenticatedRequest, res): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id;
       const { status, response } = req.body;
       const user = req.user!;
+
+      if (!id || !uuidValidate(id)) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid complaint ID format",
+        });
+        return;
+      }
 
       if (
         !status ||
@@ -343,8 +360,16 @@ router.get(
   authenticate,
   async (req: AuthenticatedRequest, res): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id;
       const user = req.user!;
+
+      if (!id || !uuidValidate(id)) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid complaint ID format",
+        });
+        return;
+      }
 
       let whereClause = "WHERE c.id = $1";
       const values: unknown[] = [id];

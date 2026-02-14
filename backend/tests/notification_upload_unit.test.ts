@@ -260,7 +260,7 @@ describe('File Upload Service Unit Tests', () => {
     });
 
     it('should perform virus scanning', async () => {
-      const cleanResult = await FileValidationService.virusScan('/path/to/clean-file.jpg');
+      const cleanResult = await FileValidationService.virusScan(testFile);
       expect(cleanResult.clean).toBe(true);
       expect(cleanResult.signature).toBeDefined();
 
@@ -459,55 +459,73 @@ describe('Integration Scenarios', () => {
   });
 
   it('should handle file upload with security checks end-to-end', async () => {
-    const mockUploadPipeline = async (file: { name: string; size: number; mimetype: string }) => {
-      // Validate MIME type
-      if (!FileValidationService.validateMimeType(file.mimetype)) {
-        throw new Error('Invalid file type');
-      }
+    // Setup temporary test file
+    const testDir = path.join(process.cwd(), 'test-files-int');
+    if (!fs.existsSync(testDir)) {
+      fs.mkdirSync(testDir, { recursive: true });
+    }
+    const testFile = path.join(testDir, 'test.jpg');
+    fs.writeFileSync(testFile, Buffer.alloc(1024, 0xFF));
 
-      // Validate file size
-      if (!FileValidationService.validateFileSize(file.size)) {
-        throw new Error('File too large');
-      }
+    try {
+      const mockUploadPipeline = async (file: { name: string; size: number; mimetype: string }) => {
+        // Validate MIME type
+        if (!FileValidationService.validateMimeType(file.mimetype)) {
+          throw new Error('Invalid file type');
+        }
 
-      // Simulate virus scan
-      const scanResult = await FileValidationService.virusScan(file.name);
-      if (!scanResult.clean) {
-        throw new Error(`Virus detected: ${scanResult.threat}`);
-      }
+        // Validate file size
+        if (!FileValidationService.validateFileSize(file.size)) {
+          throw new Error('File too large');
+        }
 
-      // Generate signed URL for private file
-      const signedUrl = S3Service.generateSignedUrl(
-        `private/user123/${file.name}`,
-        { expirationTime: 3600, userId: 'user123' }
-      );
+        // Simulate virus scan
+        const scanResult = await FileValidationService.virusScan(file.name);
+        if (!scanResult.clean) {
+          throw new Error(`Virus detected: ${scanResult.threat}`);
+        }
 
-      return {
-        success: true,
-        filename: file.name,
-        size: file.size,
-        mimetype: file.mimetype,
-        signedUrl,
-        virusClean: scanResult.clean
+        // Generate signed URL for private file
+        const signedUrl = S3Service.generateSignedUrl(
+          `private/user123/${path.basename(file.name)}`,
+          { expirationTime: 3600, userId: 'user123' }
+        );
+
+        return {
+          success: true,
+          filename: file.name,
+          size: file.size,
+          mimetype: file.mimetype,
+          signedUrl,
+          virusClean: scanResult.clean
+        };
       };
-    };
 
-    // Test valid file
-    const validFile = { name: 'document.pdf', size: 1024, mimetype: 'application/pdf' };
-    const result = await mockUploadPipeline(validFile);
-    expect(result.success).toBe(true);
-    expect(result.signedUrl).toContain('signature=');
+      // Test valid file
+      const validFile = { name: testFile, size: 1024, mimetype: 'image/jpeg' };
+      const result = await mockUploadPipeline(validFile);
+      expect(result.success).toBe(true);
+      expect(result.signedUrl).toContain('signature=');
 
-    // Test invalid MIME type
-    const invalidFile = { name: 'script.js', size: 1024, mimetype: 'application/javascript' };
-    await expect(mockUploadPipeline(invalidFile)).rejects.toThrow('Invalid file type');
+      // Test invalid MIME type
+      const invalidFile = { name: 'script.js', size: 1024, mimetype: 'application/javascript' };
+      await expect(mockUploadPipeline(invalidFile)).rejects.toThrow('Invalid file type');
 
-    // Test oversized file
-    const largeFile = { name: 'large.pdf', size: 10 * 1024 * 1024, mimetype: 'application/pdf' };
-    await expect(mockUploadPipeline(largeFile)).rejects.toThrow('File too large');
+      // Test oversized file
+      const largeFile = { name: 'large.pdf', size: 10 * 1024 * 1024, mimetype: 'application/pdf' };
+      await expect(mockUploadPipeline(largeFile)).rejects.toThrow('File too large');
 
-    // Test virus file
-    const virusFile = { name: 'virus-document.pdf', size: 1024, mimetype: 'application/pdf' };
-    await expect(mockUploadPipeline(virusFile)).rejects.toThrow('Virus detected');
+      // Test virus file
+      const virusFile = { name: 'virus-document.pdf', size: 1024, mimetype: 'application/pdf' };
+      await expect(mockUploadPipeline(virusFile)).rejects.toThrow('Virus detected');
+    } finally {
+      // Cleanup
+      if (fs.existsSync(testFile)) {
+        fs.unlinkSync(testFile);
+      }
+      if (fs.existsSync(testDir)) {
+        fs.rmdirSync(testDir);
+      }
+    }
   });
 });

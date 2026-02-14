@@ -534,7 +534,7 @@ describe('Complaints Management Tests', () => {
       const response = await request(app)
         .get('/api/complaints/invalid-id')
         .set('Authorization', `Bearer ${residentToken}`)
-        .expect(500);
+        .expect(400);
 
       expect(response.body.success).toBe(false);
     });
