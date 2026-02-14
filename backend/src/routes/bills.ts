@@ -16,7 +16,7 @@ router.get(
     try {
       const user = req.user!;
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
       const offset = (page - 1) * limit;
       const status = req.query.status as string;
       const month = req.query.month as string;
@@ -30,7 +30,7 @@ router.get(
         LEFT JOIN buildings bd ON b.building_id = bd.id
         WHERE 1=1
       `;
-      let values: any[] = [];
+      const values: unknown[] = [];
       let paramCount = 0;
 
       // Role-based filtering
@@ -211,9 +211,10 @@ router.post(
         success: true,
         data: { bill: fullResult.rows[0] },
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Create bill error:", error);
-      if (error.constraint === "bills_user_id_month_year_key") {
+      const pgError = error as { constraint?: string };
+      if (pgError.constraint === "bills_user_id_month_year_key") {
         res.status(400).json({
           success: false,
           error: "Bill for this user, month, and year already exists",
@@ -248,7 +249,7 @@ router.patch(
 
       // Build query based on user role
       let whereClause = "WHERE id = $1";
-      let values: any[] = [id];
+      const values: unknown[] = [id];
 
       // Residents can only update their own bills
       if (user.role === "resident") {
@@ -320,7 +321,7 @@ router.get(
       const user = req.user!;
 
       let whereClause = "WHERE b.id = $1";
-      let values: any[] = [id];
+      const values: unknown[] = [id];
 
       // Apply role-based filtering
       if (user.role === "resident") {
@@ -374,7 +375,7 @@ router.delete(
       const user = req.user!;
 
       let whereClause = "WHERE id = $1";
-      let values: any[] = [id];
+      const values: unknown[] = [id];
 
       // Admins can only delete bills in their building
       if (user.role === "admin" && user.buildingId) {

@@ -2,12 +2,17 @@ import pkg from "pg";
 const { Pool } = pkg;
 
 const pool = new Pool({
-  user: process.env.DB_USER || "flatexpense",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "flat_expense_db",
-  password: process.env.DB_PASSWORD || "flatexpense123",
-  port: Number(process.env.DB_PORT) || 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT),
 });
+
+if (!process.env.DB_PASSWORD) {
+  console.error("Error: DB_PASSWORD environment variable is required.");
+  process.exit(1);
+}
 
 async function checkComplaintsInDB() {
   try {
@@ -22,10 +27,10 @@ async function checkComplaintsInDB() {
 
     // Check users table to see what user IDs exist
     const usersResult = await pool.query(
-      "SELECT id, email, name, role FROM users;"
+      "SELECT id, name, role FROM users;"
     );
     console.log("Users in database:", usersResult.rows.length);
-    console.log("Users:", usersResult.rows);
+    console.log("Users (sanitized):", usersResult.rows);
 
     await pool.end();
   } catch (error) {

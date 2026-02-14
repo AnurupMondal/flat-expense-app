@@ -110,7 +110,6 @@ describe('Complaints Management Tests', () => {
     await pool.query("DELETE FROM notifications WHERE title LIKE 'Test%'");
     await pool.query("DELETE FROM buildings WHERE name LIKE 'Test Complaint%'");
     await pool.query("DELETE FROM users WHERE email LIKE 'test%complaint%'");
-    await pool.end();
   });
 
   describe('POST /api/complaints - Create Complaint', () => {

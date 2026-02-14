@@ -5,7 +5,7 @@ export interface NotificationData {
   message: string;
   type: "bill" | "complaint" | "announcement" | "system";
   urgent?: boolean;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface NotificationChannels {
@@ -28,9 +28,9 @@ class NotificationService {
     channels: NotificationChannels = { inApp: true }
   ) {
     const results = {
-      inApp: null as any,
-      email: null as any,
-      push: null as any,
+      inApp: null as Record<string, unknown> | null,
+      email: null as Record<string, unknown> | null,
+      push: null as Record<string, unknown> | null,
       errors: [] as string[],
     };
 
@@ -50,9 +50,17 @@ class NotificationService {
     }
 
     // Get user details for email/push
-    const userQuery = "SELECT email, push_token FROM users WHERE id = $1";
-    const userResult = await pool.query(userQuery, [userId]);
-    const user = userResult.rows[0];
+    // Get user details for email/push
+    let user;
+    try {
+      const userQuery = "SELECT email, push_token FROM users WHERE id = $1";
+      const userResult = await pool.query(userQuery, [userId]);
+      user = userResult.rows[0];
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      results.errors.push(`Failed to fetch user details: ${errorMessage}`);
+      return results;
+    }
 
     if (channels.email && user?.email) {
       try {
@@ -119,11 +127,14 @@ class NotificationService {
     notification: NotificationData
   ) {
     // Mock email service - replace with actual email provider
-    console.log(`Sending email to ${email}: ${notification.title}`);
+    console.log(`Sending email notification: ${notification.title}`);
 
     // Simulate potential failures
-    if (Math.random() < 0.3) {
-      throw new Error("Email service temporarily unavailable");
+    // Simulate potential failures only in development
+    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_MOCK_FAILURES === 'true') {
+      if (Math.random() < 0.3) {
+        throw new Error("Email service temporarily unavailable");
+      }
     }
 
     // Simulate email sending delay
@@ -135,7 +146,7 @@ class NotificationService {
       recipient: email,
       messageId: `email_${Date.now()}_${Math.random()
         .toString(36)
-        .substr(2, 9)}`,
+        .substring(2, 11)}`,
     };
   }
 
@@ -147,11 +158,14 @@ class NotificationService {
     notification: NotificationData
   ) {
     // Mock push service - replace with FCM/APNS
-    console.log(`Sending push to ${pushToken}: ${notification.title}`);
+    console.log(`Sending push notification: ${notification.title}`);
 
     // Simulate potential failures
-    if (Math.random() < 0.2) {
-      throw new Error("Push service unavailable");
+    // Simulate potential failures only in development
+    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_MOCK_FAILURES === 'true') {
+      if (Math.random() < 0.2) {
+        throw new Error("Push service unavailable");
+      }
     }
 
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -162,7 +176,7 @@ class NotificationService {
       recipient: pushToken,
       messageId: `push_${Date.now()}_${Math.random()
         .toString(36)
-        .substr(2, 9)}`,
+        .substring(2, 11)}`,
     };
   }
 
@@ -173,9 +187,10 @@ class NotificationService {
     fn: () => Promise<T>,
     maxRetries: number = this.MAX_RETRIES
   ): Promise<T> {
-    let lastError: Error;
+    const validMaxRetries = Math.max(1, maxRetries);
+    let lastError: Error = new Error("retryWithBackoff: no attempts were made");
 
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (let attempt = 0; attempt < validMaxRetries; attempt++) {
       try {
         return await fn();
       } catch (error) {
@@ -230,7 +245,6 @@ class NotificationService {
       UPDATE notifications 
       SET read = true 
       WHERE user_id = $1 AND read = false
-      RETURNING COUNT(*) as updated_count
     `;
 
     const result = await pool.query(query, [userId]);
@@ -249,8 +263,8 @@ class NotificationService {
       "SELECT id FROM users WHERE building_id = $1 AND status = 'approved'";
     const usersResult = await pool.query(usersQuery, [buildingId]);
 
-    const results = [];
-    for (const user of usersResult.rows) {
+
+    const promises = usersResult.rows.map(async (user) => {
       try {
         const result = await this.sendNotification(
           user.id,
@@ -258,20 +272,21 @@ class NotificationService {
           notification,
           channels
         );
-        results.push({ userId: user.id, ...result });
+        return { userId: user.id, ...result };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        results.push({
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        return {
           userId: user.id,
           error: errorMessage,
           inApp: null,
           email: null,
           push: null,
           errors: [errorMessage],
-        });
+        };
       }
-    }
+    });
+
+    const results = await Promise.all(promises);
 
     return {
       totalUsers: usersResult.rows.length,

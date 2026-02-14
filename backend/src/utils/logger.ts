@@ -1,6 +1,8 @@
 import winston from "winston";
 import path from "path";
 import fs from "fs";
+import { Response } from "express";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 // Ensure logs directory exists
 const logsDir = path.join(process.cwd(), "logs");
@@ -13,7 +15,7 @@ const logFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.errors({ stack: true }),
   winston.format.json(),
-  winston.format.printf((info: any) => {
+  winston.format.printf((info) => {
     const { timestamp, level, message, stack, ...meta } = info;
     let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
 
@@ -35,7 +37,7 @@ const logFormat = winston.format.combine(
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: "HH:mm:ss" }),
-  winston.format.printf((info: any) => {
+  winston.format.printf((info) => {
     const { timestamp, level, message, ...meta } = info;
     let log = `${timestamp} ${level}: ${message}`;
 
@@ -96,54 +98,54 @@ class Logger {
   }
 
   // Standard log levels
-  error(message: string, meta?: any): void {
+  error(message: string, meta?: unknown): void {
     this.winston.error(message, meta);
   }
 
-  warn(message: string, meta?: any): void {
+  warn(message: string, meta?: unknown): void {
     this.winston.warn(message, meta);
   }
 
-  info(message: string, meta?: any): void {
+  info(message: string, meta?: unknown): void {
     this.winston.info(message, meta);
   }
 
-  debug(message: string, meta?: any): void {
+  debug(message: string, meta?: unknown): void {
     this.winston.debug(message, meta);
   }
 
   // HTTP request logging
-  http(message: string, meta?: any): void {
+  http(message: string, meta?: unknown): void {
     this.winston.log("http", message, meta);
   }
 
   // Authentication related logs
-  auth(message: string, meta?: any): void {
+  auth(message: string, meta?: unknown): void {
     this.winston.info(`[AUTH] ${message}`, meta);
   }
 
   // Database related logs
-  db(message: string, meta?: any): void {
+  db(message: string, meta?: unknown): void {
     this.winston.info(`[DATABASE] ${message}`, meta);
   }
 
   // API related logs
-  api(message: string, meta?: any): void {
+  api(message: string, meta?: unknown): void {
     this.winston.info(`[API] ${message}`, meta);
   }
 
   // Security related logs
-  security(message: string, meta?: any): void {
+  security(message: string, meta?: unknown): void {
     this.winston.warn(`[SECURITY] ${message}`, meta);
   }
 
   // Performance related logs
-  performance(message: string, meta?: any): void {
+  performance(message: string, meta?: unknown): void {
     this.winston.info(`[PERFORMANCE] ${message}`, meta);
   }
 
   // User action logs
-  userAction(action: string, userId: number, meta?: any): void {
+  userAction(action: string, userId: number, meta?: Record<string, unknown>): void {
     this.winston.info(`[USER_ACTION] ${action}`, {
       userId,
       ...meta,
@@ -151,12 +153,12 @@ class Logger {
   }
 
   // System events
-  system(message: string, meta?: any): void {
+  system(message: string, meta?: unknown): void {
     this.winston.info(`[SYSTEM] ${message}`, meta);
   }
 
   // Request logging helper
-  logRequest(req: any, res: any, responseTime?: number): void {
+  logRequest(req: AuthenticatedRequest, res: Response, responseTime?: number): void {
     const logData = {
       method: req.method,
       url: req.originalUrl,
@@ -172,7 +174,7 @@ class Logger {
   }
 
   // Error logging helper with stack trace
-  logError(error: Error, context?: string, meta?: any): void {
+  logError(error: Error, context?: string, meta?: Record<string, unknown>): void {
     this.winston.error(`${context ? `[${context}] ` : ""}${error.message}`, {
       stack: error.stack,
       name: error.name,
@@ -185,7 +187,7 @@ class Logger {
     operation: string,
     entity: string,
     entityId?: number,
-    meta?: any
+    meta?: unknown
   ): void {
     this.winston.info(
       `[BUSINESS] ${operation} ${entity}${entityId ? ` ID:${entityId}` : ""}`,
@@ -194,12 +196,12 @@ class Logger {
   }
 
   // Validation error logging
-  validation(message: string, data?: any): void {
+  validation(message: string, data?: unknown): void {
     this.winston.warn(`[VALIDATION] ${message}`, data);
   }
 
   // External service logging
-  external(service: string, action: string, meta?: any): void {
+  external(service: string, action: string, meta?: unknown): void {
     this.winston.info(`[EXTERNAL] ${service} - ${action}`, meta);
   }
 }
@@ -211,7 +213,7 @@ export default appLogger;
 
 // Export types for TypeScript
 export interface LogMeta {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface RequestLogData {

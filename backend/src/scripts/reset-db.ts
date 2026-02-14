@@ -29,6 +29,9 @@ export async function resetDatabase() {
     logger.info("✅ All tables dropped successfully");
 
     // Recreate tables
+    // Enable uuid-ossp extension
+    await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
+
     // Buildings
     await client.query(`
       CREATE TABLE IF NOT EXISTS buildings (
@@ -119,7 +122,7 @@ export async function resetDatabase() {
         complaint_id UUID NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
         status VARCHAR(50) NOT NULL,
         note TEXT,
-        updated_by UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+        updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);

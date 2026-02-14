@@ -13,7 +13,7 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const user = req.user!;
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
     const offset = (page - 1) * limit;
     const status = req.query.status as string;
     const category = req.query.category as string;
@@ -27,7 +27,7 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
       LEFT JOIN buildings b ON c.building_id = b.id
       WHERE 1=1
     `;
-    let values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 0;
 
     // Role-based filtering
@@ -115,7 +115,7 @@ router.post(
   async (req: AuthenticatedRequest, res): Promise<void> => {
     try {
       const user = req.user!;
-      const { title, description, type, priority, location } = req.body;
+      const { description, type, priority } = req.body;
 
       // Validation
       if (!description || !type || !priority) {
@@ -210,7 +210,7 @@ router.patch(
 
       // For admins, ensure they can only update complaints in their assigned buildings
       let whereClause = "WHERE id = $1";
-      let values: any[] = [id];
+      const values: unknown[] = [id];
 
       if (user.role === "admin") {
         whereClause += ` AND building_id IN (
@@ -220,16 +220,19 @@ router.patch(
         values.push(user.userId);
       }
 
+      const newStatus = assignedTo ? 'assigned' : 'submitted';
+
       const query = `
       UPDATE complaints 
       SET assigned_to = $${values.length + 1}, 
-          status = 'assigned',
+          status = $${values.length + 2},
           updated_at = NOW()
       ${whereClause}
       RETURNING *
     `;
 
       values.push(assignedTo || null);
+      values.push(newStatus);
 
       const result = await pool.query(query, values);
 
@@ -281,7 +284,7 @@ router.patch(
 
       // For admins, ensure they can only update complaints in their assigned buildings
       let whereClause = "WHERE id = $1";
-      let values: any[] = [id];
+      const values: unknown[] = [id];
 
       if (user.role === "admin") {
         whereClause += ` AND building_id IN (
@@ -344,7 +347,7 @@ router.get(
       const user = req.user!;
 
       let whereClause = "WHERE c.id = $1";
-      let values: any[] = [id];
+      const values: unknown[] = [id];
 
       // Apply role-based filtering
       if (user.role === "resident") {

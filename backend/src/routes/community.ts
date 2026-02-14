@@ -77,6 +77,22 @@ router.post(
                 return;
             }
 
+            if (title.length < 3) {
+                res.status(400).json({
+                    success: false,
+                    error: "Title must be at least 3 characters long",
+                });
+                return;
+            }
+
+            if (content.length < 10) {
+                res.status(400).json({
+                    success: false,
+                    error: "Content must be at least 10 characters long",
+                });
+                return;
+            }
+
             const query = `
       INSERT INTO community_posts (user_id, building_id, title, content, category, attachments)
       VALUES ($1, $2, $3, $4, $5, $6)

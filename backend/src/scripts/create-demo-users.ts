@@ -387,17 +387,24 @@ class DemoDataCreator {
 
       try {
         // Send an urgent broadcast to all residents in the building
-        await pool.query(
-          `INSERT INTO notifications (id, user_id, building_id, title, message, type, urgent, read, created_at)
-           SELECT uuid_generate_v4(), id, building_id, $1, $2, 'announcement', true, false, NOW()
-           FROM users
-           WHERE building_id = $3 AND status = 'approved'`,
-          [
-            "Water Maintenance Today",
-            "Emergency water maintenance from 2 PM to 4 PM. Please store water in advance.",
-            building.id,
-          ]
+        const recipientsResult = await pool.query(
+          "SELECT id, building_id FROM users WHERE building_id = $1 AND status = 'approved'",
+          [building.id]
         );
+
+        for (const recipient of recipientsResult.rows) {
+          await pool.query(
+            `INSERT INTO notifications (id, user_id, building_id, title, message, type, urgent, read, created_at)
+             VALUES ($1, $2, $3, $4, $5, 'announcement', true, false, NOW())`,
+            [
+              uuidv4(),
+              recipient.id,
+              recipient.building_id,
+              "Water Maintenance Today",
+              "Emergency water maintenance from 2 PM to 4 PM. Please store water in advance.",
+            ]
+          );
+        }
         logger.info(`Created urgent broadcast for building: ${building.name}`);
       } catch (error) {
         logger.error(`Failed to create broadcast:`, error);
@@ -478,12 +485,14 @@ if (require.main === module) {
   const creator = new DemoDataCreator();
   creator
     .run()
-    .then(() => {
+    .then(async () => {
       logger.info("Demo data creation script completed");
+      await pool.end();
       process.exit(0);
     })
-    .catch((error) => {
+    .catch(async (error) => {
       logger.error("Demo data creation script failed:", error);
+      await pool.end();
       process.exit(1);
     });
 }

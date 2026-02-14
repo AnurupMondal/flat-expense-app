@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 
 // File filter for security
 const fileFilter = (
-  req: any,
+  req: express.Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
@@ -183,10 +183,10 @@ router.post(
 // Error handling middleware for multer
 router.use(
   (
-    error: any,
+    error: Error,
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    _next: express.NextFunction
   ): void => {
     if (error instanceof multer.MulterError) {
       if (error.code === "LIMIT_FILE_SIZE") {

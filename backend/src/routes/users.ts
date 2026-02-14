@@ -1,6 +1,7 @@
 import express from "express";
 import { pool } from "../config/database";
 import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
 import {
   authenticate,
   authorize,
@@ -13,7 +14,7 @@ const router = express.Router();
 router.get(
   "/",
   authenticate,
-  authorize("super-admin"),
+  authorize("super-admin", "admin"),
   async (req: AuthenticatedRequest, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
@@ -22,6 +23,7 @@ router.get(
       const search = (req.query.search as string) || "";
       const status = (req.query.status as string) || "";
       const role = (req.query.role as string) || "";
+      const building_id = (req.query.building_id as string) || "";
 
       let query = `
       SELECT u.id, u.email, u.name, u.role, u.phone, u.building_id, u.flat_number, 
@@ -30,7 +32,7 @@ router.get(
       LEFT JOIN buildings b ON u.building_id = b.id
       WHERE 1=1
     `;
-      const values: any[] = [];
+      const values: unknown[] = [];
       let paramCount = 0;
 
       if (search) {
@@ -49,6 +51,19 @@ router.get(
         paramCount++;
         query += ` AND u.role = $${paramCount}`;
         values.push(role);
+      }
+
+      if (building_id) {
+        paramCount++;
+        query += ` AND u.building_id = $${paramCount}`;
+        values.push(building_id);
+      }
+
+      // Filter by building for admin
+      if (req.user!.role === "admin") {
+        paramCount++;
+        query += ` AND u.building_id = $${paramCount}`;
+        values.push(req.user!.buildingId);
       }
 
       // Count total
@@ -124,13 +139,15 @@ router.post(
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
+      const id = uuidv4();
       const query = `
-        INSERT INTO users (email, password_hash, name, phone, role, building_id, flat_number, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO users (id, email, password_hash, name, phone, role, building_id, flat_number, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING id, email, name, role, phone, building_id, flat_number, status, created_at
       `;
 
       const values = [
+        id,
         email.toLowerCase(),
         passwordHash,
         name,
@@ -138,12 +155,8 @@ router.post(
         role,
         building_id || null,
         flat_number || null,
-        role === "super-admin" || role === "admin" ? "approved" : "pending", // Auto-approve admin roles, residents pending? or auto-approve all created by super admin?
-        // Let's auto-approve everyone created by super-admin for now.
+        role === "super-admin" || role === "admin" ? "approved" : "approved", // Auto-approve all created by super-admin
       ];
-
-      // Actually, line 78 in my logic above had "approved". Let's stick with approved since super admin created them.
-      values[7] = "approved";
 
       const result = await pool.query(query, values);
       const newUser = result.rows[0];
@@ -169,7 +182,7 @@ router.get("/:id", authenticate, async (req: AuthenticatedRequest, res) => {
     const user = req.user!;
 
     // Users can only view their own profile unless they're admin/super-admin
-    if (user.role === "resident" && user.userId !== parseInt(id || "0")) {
+    if (user.role === "resident" && user.userId !== id) {
       return res.status(403).json({
         success: false,
         error: "Access denied",
@@ -212,19 +225,9 @@ router.put("/:id", authenticate, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const user = req.user!;
-    const {
-      name,
-      phone,
-      flat_number,
-      building_id,
-      role,
-      status,
-      rent_enabled,
-      maintenance_enabled,
-    } = req.body;
-
     // Users can only update their own profile unless they're admin/super-admin
-    if (user.role === "resident" && user.userId !== parseInt(id || "0")) {
+    const { flat_number, building_id } = req.body;
+    if (user.role === "resident" && user.userId !== id) {
       return res.status(403).json({
         success: false,
         error: "Access denied",
@@ -243,8 +246,30 @@ router.put("/:id", authenticate, async (req: AuthenticatedRequest, res) => {
       );
     }
 
+    // Check for duplicate flat number
+    if (flat_number) {
+      let targetBuildingId = building_id;
+      if (!targetBuildingId) {
+        const userRes = await pool.query('SELECT building_id FROM users WHERE id = $1', [id]);
+        if (userRes.rows.length > 0) targetBuildingId = userRes.rows[0].building_id;
+      }
+
+      if (targetBuildingId) {
+        const conflict = await pool.query(
+          'SELECT id FROM users WHERE building_id = $1 AND flat_number = $2 AND id != $3',
+          [targetBuildingId, flat_number, id]
+        );
+        if (conflict.rows.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Flat ${flat_number} is already occupied in this building`
+          });
+        }
+      }
+    }
+
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 0;
 
     Object.entries(req.body).forEach(([key, value]) => {
@@ -396,7 +421,7 @@ router.get(
       WHERE u.status = 'pending'
     `;
 
-      const values: any[] = [];
+      const values: unknown[] = [];
 
       // Admins can only see pending users from their building
       if (user.role === "admin" && user.buildingId) {

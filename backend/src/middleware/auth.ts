@@ -5,12 +5,13 @@ import { JWTPayload } from "../types";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
-    userId: number;
+    id: string;
+    userId: string;
     email: string;
     role: string;
-    buildingId?: number;
-    [key: string]: any;
+    buildingId?: string;
+    name?: string;
+    avatar?: string;
   };
 }
 

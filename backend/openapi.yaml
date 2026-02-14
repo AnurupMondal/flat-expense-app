@@ -23,7 +23,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         email:
           type: string
           format: email
@@ -55,20 +56,21 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         name:
           type: string
         address:
           type: string
-        admin_id:
+        adminId:
           type: integer
           nullable: true
-        total_units:
+        totalUnits:
           type: integer
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
 
@@ -76,10 +78,11 @@ components:
       type: object
       properties:
         id:
+          type: string
+          format: uuid
+        userId:
           type: integer
-        user_id:
-          type: integer
-        building_id:
+        buildingId:
           type: integer
         category:
           type: string
@@ -91,10 +94,10 @@ components:
         status:
           type: string
           enum: [submitted, assigned, in-progress, resolved]
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
 
@@ -102,41 +105,42 @@ components:
       type: object
       properties:
         id:
+          type: string
+          format: uuid
+        userId:
           type: integer
-        user_id:
-          type: integer
-        building_id:
+        buildingId:
           type: integer
         month:
           type: string
         year:
           type: integer
-        rent_amount:
+        rentAmount:
           type: number
-        maintenance_amount:
+        maintenanceAmount:
           type: number
-        total_amount:
+        totalAmount:
           type: number
-        due_date:
+        dueDate:
           type: string
           format: date
         status:
           type: string
           enum: [pending, paid, overdue]
-        paid_at:
+        paidAt:
           type: string
           format: date-time
           nullable: true
-        payment_method:
+        paymentMethod:
           type: string
           nullable: true
-        transaction_id:
+        transactionId:
           type: string
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
 
@@ -144,10 +148,11 @@ components:
       type: object
       properties:
         id:
+          type: string
+          format: uuid
+        userId:
           type: integer
-        user_id:
-          type: integer
-        building_id:
+        buildingId:
           type: integer
         type:
           type: string
@@ -158,7 +163,7 @@ components:
           type: string
         read:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
 
@@ -260,9 +265,9 @@ paths:
                   type: string
                 phone:
                   type: string
-                building_id:
+                buildingId:
                   type: integer
-                flat_number:
+                flatNumber:
                   type: string
       responses:
         '201':
@@ -339,6 +344,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/me:
     get:
@@ -408,7 +419,7 @@ paths:
                       data:
                         type: object
                         properties:
-                          users:
+                          items:
                             type: array
                             items:
                               $ref: '#/components/schemas/User'
@@ -428,7 +439,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: User details
@@ -459,7 +471,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -502,6 +515,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     delete:
       summary: Delete user (Super Admin only)
@@ -511,7 +536,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: User deleted successfully
@@ -521,6 +547,18 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -563,9 +601,9 @@ paths:
                   type: string
                 address:
                   type: string
-                admin_id:
+                adminId:
                   type: integer
-                total_units:
+                totalUnits:
                   type: integer
       responses:
         '201':
@@ -582,6 +620,18 @@ paths:
                         properties:
                           building:
                             $ref: '#/components/schemas/Building'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /complaints:
     get:
@@ -614,13 +664,13 @@ paths:
           application/json:
             schema:
               type: object
-              required: [description, type, priority]
+              required: [description, category, priority]
               properties:
                 title:
                   type: string
                 description:
                   type: string
-                type:
+                category:
                   type: string
                 priority:
                   type: string
@@ -712,6 +762,18 @@ paths:
                         properties:
                           bill:
                             $ref: '#/components/schemas/Bill'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /notifications:
     get:
@@ -772,6 +834,18 @@ paths:
                         properties:
                           notification:
                             $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /analytics:
     get:

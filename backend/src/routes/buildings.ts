@@ -22,7 +22,7 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
       LEFT JOIN users u ON b.admin_id = u.id
       WHERE 1=1
     `;
-    let values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 0;
 
     // Search filter
@@ -85,6 +85,16 @@ router.post(
         });
       }
 
+      const existingQuery = `SELECT id FROM buildings WHERE name = $1`;
+      const existing = await pool.query(existingQuery, [name]);
+
+      if (existing.rows.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: "Building with this name already exists",
+        });
+      }
+
       const query = `
       INSERT INTO buildings (name, address, admin_id, total_units)
       VALUES ($1, $2, $3, $4)
@@ -124,7 +134,7 @@ router.put(
       const { name, address, admin_id, total_units } = req.body;
 
       const updates: string[] = [];
-      const values: any[] = [];
+      const values: unknown[] = [];
       let paramCount = 0;
 
       if (name !== undefined) {
@@ -132,19 +142,19 @@ router.put(
         updates.push(`name = $${paramCount}`);
         values.push(name);
       }
-      
+
       if (address !== undefined) {
         paramCount++;
         updates.push(`address = $${paramCount}`);
         values.push(address);
       }
-      
+
       if (admin_id !== undefined) {
         paramCount++;
         updates.push(`admin_id = $${paramCount}`);
         values.push(admin_id);
       }
-      
+
       if (total_units !== undefined) {
         paramCount++;
         updates.push(`total_units = $${paramCount}`);
@@ -160,7 +170,7 @@ router.put(
 
       paramCount++;
       values.push(id);
-      
+
       // Check for duplicate building name
       if (name) {
         const duplicateCheck = await pool.query(
@@ -220,7 +230,7 @@ router.delete(
         "SELECT COUNT(*) FROM users WHERE building_id = $1 AND status != 'rejected'",
         [id]
       );
-      
+
       const residentCount = parseInt(residentsCheck.rows[0].count);
       if (residentCount > 0) {
         return res.status(400).json({
@@ -266,13 +276,16 @@ router.get(
 
       // Get unique flat numbers from users table for this building
       const query = `
-        SELECT DISTINCT flat_number, 
+        SELECT flat_number, 
                COUNT(CASE WHEN status = 'approved' THEN 1 END) > 0 as occupied,
                STRING_AGG(CASE WHEN status = 'approved' THEN name END, ', ') as resident_name
         FROM users 
         WHERE building_id = $1 AND flat_number IS NOT NULL
         GROUP BY flat_number
-        ORDER BY flat_number::int
+        ORDER BY CASE 
+          WHEN flat_number ~ '^\\d+$' THEN flat_number::integer 
+          ELSE NULL 
+        END, flat_number
       `;
 
       const result = await pool.query(query, [id]);
@@ -313,7 +326,7 @@ router.post(
         "SELECT id FROM users WHERE building_id = $1 AND flat_number = $2",
         [id, flat_number]
       );
-      
+
       if (duplicateCheck.rows.length > 0) {
         return res.status(400).json({
           success: false,
@@ -364,11 +377,11 @@ router.post(
 
       const lines = csv_data.trim().split('\n');
       const headers = lines[0].split(',').map((h: string) => h.trim());
-      
+
       // Validate headers
       const requiredHeaders = ['name', 'address', 'total_units'];
       const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-      
+
       if (missingHeaders.length > 0) {
         return res.status(400).json({
           success: false,
@@ -381,8 +394,8 @@ router.post(
 
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',').map((v: string) => v.trim());
-        const building: any = {};
-        
+        const building: Record<string, string> = {};
+
         headers.forEach((header: string, index: number) => {
           building[header] = values[index];
         });
@@ -399,8 +412,9 @@ router.post(
             [building.name, building.address, parseInt(building.total_units)]
           );
           buildings.push(result.rows[0]);
-        } catch (error: any) {
-          errors.push(`Line ${i + 1}: ${error.message}`);
+        } catch (error) {
+          const err = error as Error;
+          errors.push(`Line ${i + 1}: ${err.message}`);
         }
       }
 
@@ -448,7 +462,7 @@ router.get(
 
       // Get occupancy data
       const occupancyData = await pool.query(
-        "SELECT COUNT(*) as occupied_units FROM users WHERE building_id = $1 AND status = 'approved'",
+        "SELECT COUNT(DISTINCT flat_number) as occupied_units FROM users WHERE building_id = $1 AND status = 'approved' AND flat_number IS NOT NULL",
         [id]
       );
 
@@ -458,7 +472,7 @@ router.get(
 
       // Get revenue data (mock)
       const revenueData = {
-        monthly_revenue: occupiedUnits * 1000, 
+        monthly_revenue: occupiedUnits * 1000,
         total_pending: 0,
         collection_rate: 95
       };

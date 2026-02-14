@@ -106,7 +106,7 @@ export interface Notification {
   message: string;
   urgent: boolean;
   read: boolean;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   created_at: Date;
 }
 
@@ -120,7 +120,7 @@ export interface UserSession {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -147,11 +147,12 @@ export interface PaginatedResponse<T> {
 }
 
 // Authentication types
+// Authentication types
 export interface JWTPayload {
-  userId: number; // Changed from string to number
+  userId: string;
   email: string;
   role: string;
-  buildingId?: number; // Changed from string to number
+  buildingId?: string;
 }
 
 export interface LoginRequest {

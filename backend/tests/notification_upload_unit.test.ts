@@ -7,45 +7,45 @@ import { FileValidationService, S3Service, UploadService } from '../src/services
 class MockNotificationService {
   private static retryAttempts: number = 0;
   private static failureSimulator: boolean = false;
-  
+
   static resetFailureSimulator() {
     this.retryAttempts = 0;
     this.failureSimulator = false;
   }
-  
+
   static enableFailureSimulator() {
     this.failureSimulator = true;
     this.retryAttempts = 0;
   }
-  
+
   static async sendInAppNotification(userId: string, message: any) {
     return { success: true, channel: 'in-app', userId, message };
   }
-  
+
   static async sendEmailNotification(email: string, message: any) {
     this.retryAttempts++;
-    
+
     if (this.failureSimulator && this.retryAttempts <= 2) {
       throw new Error('Email service temporarily unavailable');
     }
-    
-    return { 
-      success: true, 
-      channel: 'email', 
-      email, 
+
+    return {
+      success: true,
+      channel: 'email',
+      email,
       message,
       attempt: this.retryAttempts
     };
   }
-  
+
   static async sendPushNotification(deviceToken: string, message: any) {
-    if (this.failureSimulator && Math.random() < 0.5) {
+    if (this.failureSimulator) {
       throw new Error('Push service unavailable');
     }
-    
+
     return { success: true, channel: 'push', deviceToken, message };
   }
-  
+
   static async retryWithBackoff<T>(
     fn: () => Promise<T>,
     maxRetries: number = 3,
@@ -102,11 +102,11 @@ describe('Notification Service Unit Tests', () => {
 
     it('should handle push notification failures gracefully', async () => {
       MockNotificationService.enableFailureSimulator();
-      
+
       // Run multiple attempts as the failure is random
       let successCount = 0;
       let failureCount = 0;
-      
+
       for (let i = 0; i < 10; i++) {
         try {
           await MockNotificationService.sendPushNotification('token', { title: 'Test' });
@@ -116,7 +116,7 @@ describe('Notification Service Unit Tests', () => {
           expect((error as Error).message).toBe('Push service unavailable');
         }
       }
-      
+
       // At least some should fail due to simulation
       expect(failureCount).toBeGreaterThan(0);
     });
@@ -125,7 +125,7 @@ describe('Notification Service Unit Tests', () => {
   describe('Retry Logic and Backoff', () => {
     it('should implement retry logic for email notifications', async () => {
       MockNotificationService.enableFailureSimulator();
-      
+
       const startTime = Date.now();
       const result = await MockNotificationService.retryWithBackoff(
         () => MockNotificationService.sendEmailNotification('test@example.com', { subject: 'Test' }),
@@ -252,7 +252,7 @@ describe('File Upload Service Unit Tests', () => {
 
     it('should enforce file size limits', () => {
       const maxSize = 5 * 1024 * 1024; // 5MB
-      
+
       expect(FileValidationService.validateFileSize(1024)).toBe(true); // 1KB
       expect(FileValidationService.validateFileSize(maxSize)).toBe(true); // Exactly 5MB
       expect(FileValidationService.validateFileSize(maxSize + 1)).toBe(false); // Over 5MB
@@ -321,7 +321,7 @@ describe('File Upload Service Unit Tests', () => {
     it('should reject URLs with invalid signatures', () => {
       const fileKey = 'test-file.pdf';
       const validUrl = S3Service.generateSignedUrl(fileKey, { expirationTime: 3600 });
-      
+
       // Tamper with the signature
       const tamperedUrl = validUrl.replace(/signature=[^&]+/, 'signature=invalid-signature');
       const validation = S3Service.validateSignedUrl(tamperedUrl);
@@ -395,14 +395,14 @@ describe('File Upload Service Unit Tests', () => {
 
       const mockProcessFile = async (filePath: string) => {
         const scanResult = await FileValidationService.virusScan(filePath);
-        
+
         if (!scanResult.clean) {
           if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
           }
           throw new Error(`File rejected: ${scanResult.threat}`);
         }
-        
+
         return scanResult;
       };
 
@@ -415,7 +415,7 @@ describe('File Upload Service Unit Tests', () => {
 describe('Integration Scenarios', () => {
   it('should handle notification delivery failures gracefully', async () => {
     MockNotificationService.enableFailureSimulator();
-    
+
     const mockSendMultiChannel = async (userId: string, message: any) => {
       const results = {
         inApp: null as any,
@@ -451,7 +451,7 @@ describe('Integration Scenarios', () => {
     };
 
     const result = await mockSendMultiChannel('user123', { title: 'Test' });
-    
+
     expect(result.inApp.success).toBe(true);
     expect(result.email.success).toBe(true); // Should succeed after retries
     // Push may succeed or fail randomly due to simulation

@@ -17,7 +17,7 @@ router.get(
     try {
       const user = req.user!;
       let buildingFilter = "";
-      const values: any[] = [];
+      const values: unknown[] = [];
 
       // Admins can only see analytics for their building
       if (user.role === "admin" && user.buildingId) {
@@ -80,7 +80,7 @@ router.get(
 
       // Occupancy analytics (for building-specific or all buildings)
       let occupancyQuery = "";
-      let occupancyValues: any[] = [];
+      let occupancyValues: unknown[] = [];
 
       if (user.role === "admin" && user.buildingId) {
         occupancyQuery = `
@@ -122,8 +122,8 @@ router.get(
             parseInt(occupancyResult.rows[0]?.occupied || 0),
           rate: occupancyResult.rows[0]?.total_units
             ? (parseInt(occupancyResult.rows[0]?.occupied || 0) /
-                parseInt(occupancyResult.rows[0]?.total_units || 1)) *
-              100
+              parseInt(occupancyResult.rows[0]?.total_units || 1)) *
+            100
             : 0,
         },
         users: userResult.rows[0] || {

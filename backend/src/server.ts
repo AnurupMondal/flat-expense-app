@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import morgan from "morgan";
+
 import compression from "compression";
 import { createServer } from "http";
 import dotenv from "dotenv";
@@ -75,7 +75,7 @@ app.use("/api", (req, res, next) => {
 app.use(
   express.json({
     limit: "10mb",
-    verify: (req, res, buf, encoding) => {
+    verify: (req, res, buf) => {
       if (buf && buf.length) {
         console.log("Raw request body:", buf.toString("utf8"));
       }
@@ -86,13 +86,13 @@ app.use(
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Custom error handler for JSON parsing
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
   if (
     error instanceof SyntaxError &&
-    (error as any).status === 400 &&
-    "body" in error
+    (error as { status?: number }).status === 400 &&
+    "body" in (error as object)
   ) {
-    logger.logError(error, "JSON_PARSE_ERROR", {
+    logger.logError(error as Error, "JSON_PARSE_ERROR", {
       path: req.path,
       method: req.method,
       contentType: req.get("Content-Type"),

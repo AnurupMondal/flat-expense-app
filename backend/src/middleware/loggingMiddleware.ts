@@ -1,9 +1,10 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import logger from "../utils/logger";
 import { AuthenticatedRequest } from "./auth";
 
 // Extend Request interface to include startTime only
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       startTime?: number;
@@ -52,14 +53,14 @@ export const requestLogger = (
 
   // Override res.end to log response
   const originalEnd = res.end;
-  res.end = function (chunk?: any, encoding?: any): Response {
+  res.end = function (chunk?: unknown, encoding?: unknown): Response {
     const responseTime = req.startTime ? Date.now() - req.startTime : 0;
 
     // Log response
     logger.logRequest(req, res, responseTime);
 
     // Call original end method
-    return originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding as BufferEncoding);
   };
 
   next();
@@ -93,7 +94,7 @@ export const logSuccess = (
   req: AuthenticatedRequest,
   res: Response,
   message: string,
-  data?: any
+  data?: unknown
 ): void => {
   logger.api(`SUCCESS: ${message}`, {
     method: req.method,
@@ -114,7 +115,7 @@ export const logBusinessOperation = (
   entity: string,
   entityId?: number,
   userId?: number,
-  details?: any
+  details?: unknown
 ): void => {
   logger.business(operation, entity, entityId, {
     performedBy: userId,
@@ -129,7 +130,7 @@ export const logAuthEvent = (
   userId?: number,
   email?: string,
   success: boolean = true,
-  details?: any
+  details?: unknown
 ): void => {
   logger.auth(`${event}: ${success ? "SUCCESS" : "FAILED"}`, {
     userId,
@@ -144,7 +145,7 @@ export const logAuthEvent = (
 export const logSecurityEvent = (
   event: string,
   severity: "low" | "medium" | "high" | "critical",
-  details?: any
+  details?: unknown
 ): void => {
   logger.security(`SECURITY_EVENT: ${event} [${severity.toUpperCase()}]`, {
     severity,
@@ -158,11 +159,10 @@ export const logDatabaseOperation = (
   operation: string,
   table: string,
   success: boolean,
-  details?: any
+  details?: unknown
 ): void => {
   logger.db(
-    `DB_${operation.toUpperCase()}: ${table} - ${
-      success ? "SUCCESS" : "FAILED"
+    `DB_${operation.toUpperCase()}: ${table} - ${success ? "SUCCESS" : "FAILED"
     }`,
     {
       operation,
@@ -179,7 +179,7 @@ export const logPerformance = (
   operation: string,
   duration: number,
   threshold: number = 1000,
-  details?: any
+  details?: unknown
 ): void => {
   const isSlowOperation = duration > threshold;
 

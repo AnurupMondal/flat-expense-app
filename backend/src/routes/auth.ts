@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../config/database";
-import { User, JWTPayload } from "../types";
+import { JWTPayload } from "../types";
 import logger from "../utils/logger";
 import {
   logAuthEvent,
@@ -21,18 +21,29 @@ router.post("/register", async (req, res) => {
     logger.auth("User registration attempt", { email, name });
 
     // Validate input
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !building_id || !flat_number) {
       logger.validation(
         "Registration validation failed - missing required fields",
         {
           email: !!email,
           password: !!password,
           name: !!name,
+          building_id: !!building_id,
+          flat_number: !!flat_number,
         }
       );
       return res.status(400).json({
         success: false,
-        error: "Email, password, and name are required",
+        error: "Email, password, name, building and flat number are required",
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid email format",
       });
     }
 
@@ -53,6 +64,21 @@ router.post("/register", async (req, res) => {
         error: "User already exists with this email",
         code: "USER_ALREADY_EXISTS"
       });
+    }
+
+    // Check for duplicate flat in building
+    if (building_id && flat_number) {
+      const existingFlat = await pool.query(
+        "SELECT id FROM users WHERE building_id = $1 AND flat_number = $2",
+        [building_id, flat_number]
+      );
+
+      if (existingFlat.rows.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: `Flat ${flat_number} is already occupied in this building`,
+        });
+      }
     }
 
     // Hash password

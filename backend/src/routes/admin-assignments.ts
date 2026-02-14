@@ -183,23 +183,23 @@ router.post(
 
       // Check if there's an inactive (previously removed) assignment to reactivate
       const existingInactiveAssignment = await pool.query(
-        "SELECT id FROM admin_building_assignments WHERE admin_id = $1 AND building_id = $2 AND is_active = false",
+        "SELECT id FROM admin_building_assignments WHERE admin_id = $1 AND building_id = $2 AND is_active = false ORDER BY created_at DESC LIMIT 1",
         [adminId, buildingId]
       );
 
       let result;
       if (existingInactiveAssignment.rows.length > 0) {
+        const assignmentId = existingInactiveAssignment.rows[0].id;
         // Reactivate the existing assignment
         const reactivateQuery = `
           UPDATE admin_building_assignments 
           SET is_active = true, assigned_by = $1, updated_at = CURRENT_TIMESTAMP
-          WHERE admin_id = $2 AND building_id = $3 AND is_active = false
+          WHERE id = $2
           RETURNING *
         `;
         result = await pool.query(reactivateQuery, [
           user.userId,
-          adminId,
-          buildingId,
+          assignmentId,
         ]);
       } else {
         // Create new assignment

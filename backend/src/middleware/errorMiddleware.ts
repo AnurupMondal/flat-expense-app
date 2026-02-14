@@ -6,20 +6,20 @@ interface ErrorResponse {
   success: false;
   error: string;
   code?: string;
-  details?: any;
+  details?: unknown;
   timestamp: string;
   path: string;
   requestId?: string;
 }
 
 // Standard API response interface
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
   error?: string;
   code?: string;
-  details?: any;
+  details?: unknown;
   timestamp?: string;
   path?: string;
 }
@@ -30,13 +30,13 @@ export class AppError extends Error {
   public status: string;
   public isOperational: boolean;
   public code?: string;
-  public details?: any;
+  public details?: unknown;
 
   constructor(
     message: string,
     statusCode: number,
     code?: string,
-    details?: any
+    details?: unknown
   ) {
     super(message);
     this.statusCode = statusCode;
@@ -57,7 +57,7 @@ export class AppError extends Error {
 export interface ApiError extends Error {
   statusCode?: number;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 // Helper function to create standardized error responses
@@ -66,7 +66,7 @@ export const createErrorResponse = (
   statusCode: number,
   req: Request,
   code?: string,
-  details?: any
+  details?: unknown
 ): ErrorResponse => {
   const response: ErrorResponse = {
     success: false,
@@ -83,9 +83,11 @@ export const createErrorResponse = (
     response.details = details;
   }
 
-  const requestId = req.headers["x-request-id"] as string;
-  if (requestId) {
-    response.requestId = requestId;
+  const rawRequestId = req.headers["x-request-id"];
+  if (typeof rawRequestId === "string") {
+    response.requestId = rawRequestId as string;
+  } else if (Array.isArray(rawRequestId) && rawRequestId.length > 0) {
+    response.requestId = rawRequestId[0] as string;
   }
 
   return response;
@@ -116,7 +118,7 @@ export const createSuccessResponse = <T>(
 export const notFound = (
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   logger.api(`404 Not Found: ${req.method} ${req.originalUrl}`);
 
@@ -135,9 +137,9 @@ export const errorHandler = (
   err: ApiError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
-  let error = { ...err };
+  const error = { ...err };
   error.message = err.message;
   let statusCode = err.statusCode || 500;
   let errorCode = err.code;
@@ -233,7 +235,7 @@ export const errorHandler = (
   // Add stack trace in development
   if (process.env.NODE_ENV === "development") {
     errorResponse.details = {
-      ...errorResponse.details,
+      ...(typeof errorResponse.details === "object" ? errorResponse.details : {}),
       stack: err.stack,
     };
   }

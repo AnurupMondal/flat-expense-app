@@ -1,4 +1,4 @@
-import { RateLimiterMemory } from "rate-limiter-flexible";
+import { RateLimiterMemory, RateLimiterRes } from "rate-limiter-flexible";
 import { Request, Response, NextFunction } from "express";
 
 // Rate limiter configuration
@@ -17,7 +17,8 @@ export const rateLimiterMiddleware = async (
   try {
     await rateLimiter.consume(req.ip || "unknown");
     next();
-  } catch (rejRes: any) {
+  } catch (err) {
+    const rejRes = err as RateLimiterRes;
     const secs = Math.round(rejRes.msBeforeNext / 1000) || 1;
     res.set("Retry-After", String(secs));
     res.status(429).json({

@@ -20,9 +20,9 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: flatexpense
+          POSTGRES_PASSWORD: flatexpense123
+          POSTGRES_DB: flat_expense_db_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -92,7 +92,7 @@ jobs:
       env:
         NODE_ENV: test
         NEXT_PUBLIC_API_URL: http://localhost:3001/api
-      run: npm run build && npm run lint
+      run: npm run build && npm run lint && npm test
 
     - name: Run backend linting
       if: matrix.component == 'backend'
@@ -150,4 +150,5 @@ jobs:
         curl -f http://localhost:3000 || exit 1
     
     - name: Cleanup
+      if: always()
       run: docker-compose down -v
