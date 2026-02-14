@@ -183,8 +183,8 @@ export default function AuthPage({
       <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] relative flex-col justify-center items-center p-12 overflow-hidden text-white">
         {/* Background Effects */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] opacity-40 animate-pulse duration-[4s]"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] opacity-30 animate-pulse duration-[6s]"></div>
+          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] opacity-40 animate-pulse duration-4s"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] opacity-30 animate-pulse duration-6s"></div>
         </div>
 
         <div className="relative z-10 w-full max-w-lg flex flex-col items-center">

@@ -85,6 +85,10 @@ const config: Config = {
       transitionTimingFunction: {
         modern: "cubic-bezier(0.4, 0, 0.2, 1)",
       },
+      transitionDuration: {
+        "4s": "4s",
+        "6s": "6s",
+      },
       keyframes: {
         "accordion-down": {
           from: {

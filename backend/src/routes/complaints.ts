@@ -7,6 +7,11 @@ import {
   AuthenticatedRequest,
 } from "../middleware/auth";
 
+/** PostgreSQL-style error with optional code (e.g. 22P02 invalid text) */
+interface PgError extends Error {
+  code?: string;
+}
+
 const router = express.Router();
 
 // Get all complaints (filtered by role) with pagination and filtering
@@ -101,7 +106,7 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
       },
     });
   } catch (error) {
-    if ((error as any).code === "22P02") {
+    if ((error as PgError).code === "22P02") {
       res.status(400).json({
         success: false,
         error: "Invalid input syntax for parameter",
@@ -214,7 +219,7 @@ router.post(
       });
     } catch (error) {
       // Handle Postgres enum error (22P02 - Invalid text representation)
-      if ((error as any).code === "22P02") {
+      if ((error as PgError).code === "22P02") {
         res.status(400).json({
           success: false,
           error: "Invalid input value for enum field (priority/status/category)",
@@ -292,7 +297,7 @@ router.patch(
         data: { complaint: result.rows[0] },
       });
     } catch (error) {
-      if ((error as any).code === "22P02") {
+      if ((error as PgError).code === "22P02") {
         res.status(400).json({
           success: false,
           error: "Invalid input syntax for parameter",
@@ -385,7 +390,7 @@ router.patch(
         data: { complaint: result.rows[0] },
       });
     } catch (error) {
-      if ((error as any).code === "22P02") {
+      if ((error as PgError).code === "22P02") {
         res.status(400).json({
           success: false,
           error: "Invalid input syntax for parameter",
@@ -456,7 +461,7 @@ router.get(
         data: { complaint: result.rows[0] },
       });
     } catch (error) {
-      if ((error as any).code === "22P02") {
+      if ((error as PgError).code === "22P02") {
         res.status(400).json({
           success: false,
           error: "Invalid input syntax for parameter",

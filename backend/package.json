@@ -10,8 +10,8 @@
     "build:docker": "tsc -p tsconfig.build.json",
     "test": "jest --runInBand",
     "test:watch": "jest --watch --runInBand",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "create-admin-user": "ts-node scripts/create-admin-user.ts",
     "db:test:setup": "ts-node scripts/setup-test-db.ts",
     "pretest": "npm run db:test:setup"
