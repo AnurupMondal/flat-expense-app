@@ -174,12 +174,11 @@ describe('Complaints Management Tests', () => {
         priority: 'invalid-priority'
       };
 
-      // This should pass through to the database validation
       const response = await request(app)
         .post('/api/complaints')
         .set('Authorization', `Bearer ${residentToken}`)
         .send(invalidData)
-        .expect(500);
+        .expect(400);
 
       expect(response.body.success).toBe(false);
     });
