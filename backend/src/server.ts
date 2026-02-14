@@ -38,10 +38,12 @@ logger.system("Server initialization started", {
 });
 
 // Database connection
-connectDB();
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
 
-// Ensure admin user exists
-ensureAdminUser();
+  // Ensure admin user exists
+  ensureAdminUser();
+}
 
 // Security middleware
 app.use(helmet());
