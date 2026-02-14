@@ -61,17 +61,6 @@ export async function ensureAdminUser() {
 
     // Create demo users
     for (const userData of demoUsers) {
-      // Check if user already exists
-      const existing = await pool.query(
-        "SELECT id FROM users WHERE email = $1",
-        [userData.email]
-      );
-
-      if (existing.rows.length > 0) {
-        console.log(`✅ User ${userData.email} already exists`);
-        continue;
-      }
-
       // Create user with bcrypt hash
       const passwordHash = await bcrypt.hash(userData.password, 10);
 
@@ -79,9 +68,10 @@ export async function ensureAdminUser() {
       const userBuildingId =
         userData.role !== "super-admin" ? buildingId : null;
 
-      await pool.query(
+      const result = await pool.query(
         `INSERT INTO users (email, password_hash, name, role, phone, status, building_id, flat_number)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (email) DO NOTHING`,
         [
           userData.email,
           passwordHash,
@@ -94,7 +84,11 @@ export async function ensureAdminUser() {
         ]
       );
 
-      console.log(`✅ ${userData.role} user created: ${userData.email}`);
+      if (result.rowCount && result.rowCount > 0) {
+        console.log(`✅ ${userData.role} user created: ${userData.email}`);
+      } else {
+        console.log(`✅ User ${userData.email} already exists`);
+      }
     }
 
     // Update building admin_id to point to the admin user

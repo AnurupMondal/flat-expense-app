@@ -10,6 +10,6 @@ module.exports = {
     'src/**/*.ts',
     '!src/**/*.d.ts',
   ],
-  setupFiles: ['<rootDir>/tests/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 30000
 };

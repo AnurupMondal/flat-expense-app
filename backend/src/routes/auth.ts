@@ -67,17 +67,29 @@ router.post("/register", async (req, res) => {
     }
 
     // Check for duplicate flat in building
-    if (building_id && flat_number) {
-      const existingFlat = await pool.query(
-        "SELECT id FROM users WHERE building_id = $1 AND flat_number = $2",
-        [building_id, flat_number]
-      );
-
-      if (existingFlat.rows.length > 0) {
+    // Check for duplicate flat in building
+    if (building_id) {
+      // Validate building exists first
+      const buildingCheck = await pool.query("SELECT id FROM buildings WHERE id = $1", [building_id]);
+      if (buildingCheck.rows.length === 0) {
         return res.status(400).json({
           success: false,
-          error: `Flat ${flat_number} is already occupied in this building`,
+          error: "Invalid building ID specified",
         });
+      }
+
+      if (flat_number) {
+        const existingFlat = await pool.query(
+          "SELECT id FROM users WHERE building_id = $1 AND flat_number = $2",
+          [building_id, flat_number]
+        );
+
+        if (existingFlat.rows.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Flat ${flat_number} is already occupied in this building`,
+          });
+        }
       }
     }
 

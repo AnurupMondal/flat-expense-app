@@ -221,7 +221,7 @@ describe('File Upload Service Unit Tests', () => {
       fs.unlinkSync(testFile);
     }
     if (fs.existsSync(testDir)) {
-      fs.rmdirSync(testDir);
+      fs.rmSync(testDir, { recursive: true, force: true });
     }
   });
 
@@ -524,7 +524,7 @@ describe('Integration Scenarios', () => {
         fs.unlinkSync(testFile);
       }
       if (fs.existsSync(testDir)) {
-        fs.rmdirSync(testDir);
+        fs.rmSync(testDir, { recursive: true, force: true });
       }
     }
   });

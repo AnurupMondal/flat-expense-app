@@ -101,6 +101,13 @@ router.get("/", authenticate, async (req: AuthenticatedRequest, res) => {
       },
     });
   } catch (error) {
+    if ((error as any).code === "22P02") {
+      res.status(400).json({
+        success: false,
+        error: "Invalid input syntax for parameter",
+      });
+      return;
+    }
     console.error("Get complaints error:", error);
     res.status(500).json({
       success: false,
@@ -132,6 +139,23 @@ router.post(
       const userQuery = "SELECT building_id FROM users WHERE id = $1";
       const userResult = await pool.query(userQuery, [user.userId]);
       const buildingId = userResult.rows[0]?.building_id;
+
+      if (!buildingId) {
+        res.status(400).json({
+          success: false,
+          error: "User is not assigned to any building",
+        });
+        return;
+      }
+
+      const validPriorities = ["low", "medium", "high"];
+      if (!validPriorities.includes(priority)) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid priority. Must be low, medium, or high",
+        });
+        return;
+      }
 
 
       // Find active admin for this building
@@ -189,6 +213,15 @@ router.post(
         data: { complaint: fullResult.rows[0] },
       });
     } catch (error) {
+      // Handle Postgres enum error (22P02 - Invalid text representation)
+      if ((error as any).code === "22P02") {
+        res.status(400).json({
+          success: false,
+          error: "Invalid input value for enum field (priority/status/category)",
+        });
+        return;
+      }
+
       console.error("Create complaint error:", error);
       res.status(500).json({
         success: false,
@@ -259,6 +292,13 @@ router.patch(
         data: { complaint: result.rows[0] },
       });
     } catch (error) {
+      if ((error as any).code === "22P02") {
+        res.status(400).json({
+          success: false,
+          error: "Invalid input syntax for parameter",
+        });
+        return;
+      }
       console.error("Update complaint assignment error:", error);
       res.status(500).json({
         success: false,
@@ -345,6 +385,13 @@ router.patch(
         data: { complaint: result.rows[0] },
       });
     } catch (error) {
+      if ((error as any).code === "22P02") {
+        res.status(400).json({
+          success: false,
+          error: "Invalid input syntax for parameter",
+        });
+        return;
+      }
       console.error("Update complaint status error:", error);
       res.status(500).json({
         success: false,
@@ -409,6 +456,13 @@ router.get(
         data: { complaint: result.rows[0] },
       });
     } catch (error) {
+      if ((error as any).code === "22P02") {
+        res.status(400).json({
+          success: false,
+          error: "Invalid input syntax for parameter",
+        });
+        return;
+      }
       console.error("Get complaint by ID error:", error);
       res.status(500).json({
         success: false,

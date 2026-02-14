@@ -217,7 +217,7 @@ describe('File Upload System Tests', () => {
     }
     const testDir = path.dirname(testFilePath);
     if (fs.existsSync(testDir)) {
-      fs.rmdirSync(testDir);
+      fs.rmSync(testDir, { recursive: true, force: true });
     }
   });
 
