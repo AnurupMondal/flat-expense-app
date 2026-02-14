@@ -1,5 +1,7 @@
 import request from 'supertest';
 import app from '../src/server';
+import { pool } from '../src/config/database';
+import { v4 as uuidv4 } from 'uuid';
 
 import fs from 'fs';
 import path from 'path';
@@ -102,12 +104,23 @@ describe('Notification System Tests', () => {
   let testUserId: string;
 
   beforeAll(async () => {
-    // Create test user and generate auth token
-    testUserId = 'test-user-123';
+    // Create test user with valid UUID (users.id is UUID type) and generate auth token
+    testUserId = uuidv4();
+
+    // Seed the test user
+    await pool.query(
+      "INSERT INTO users (id, email, name, password_hash, role, status, building_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING",
+      [testUserId, 'test-notif@example.com', 'Test Notif User', 'hash', 'resident', 'approved', null]
+    );
+
     authToken = jwt.sign(
       { userId: testUserId, role: 'resident' },
       process.env.JWT_SECRET || 'test-secret'
     );
+  });
+
+  afterAll(async () => {
+    await pool.query("DELETE FROM users WHERE id = $1", [testUserId]);
   });
 
   describe('In-App Notifications', () => {
@@ -122,14 +135,14 @@ describe('Notification System Tests', () => {
     });
 
     it('should mark notification as read and update count', async () => {
-      // This test would require seeded data or mock database
-      const mockNotificationId = '123';
+      // Use a valid UUID that does not exist so API returns 404 (notification not found)
+      const mockNotificationId = uuidv4();
 
       const response = await request(app)
         .patch(`/api/notifications/${mockNotificationId}/read`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      // Expect either success or 404 (notification not found)
+      // Expect either success (200) or 404 (notification not found)
       expect([200, 404]).toContain(response.status);
     });
 
@@ -190,11 +203,17 @@ describe('Notification System Tests', () => {
 describe('File Upload System Tests', () => {
   let authToken: string;
   let testFilePath: string;
+  let fileUploadTestUserId: string;
 
   beforeAll(async () => {
-    // Create test auth token
+    // Create test user with valid UUID so authenticate middleware finds the user
+    fileUploadTestUserId = uuidv4();
+    await pool.query(
+      "INSERT INTO users (id, email, name, password_hash, role, status, building_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING",
+      [fileUploadTestUserId, 'test-upload@example.com', 'Test Upload User', 'hash', 'resident', 'approved', null]
+    );
     authToken = jwt.sign(
-      { userId: 'test-user-123', role: 'resident' },
+      { userId: fileUploadTestUserId, role: 'resident' },
       process.env.JWT_SECRET || 'test-secret'
     );
 
@@ -211,12 +230,15 @@ describe('File Upload System Tests', () => {
   });
 
   afterAll(async () => {
+    if (fileUploadTestUserId) {
+      await pool.query("DELETE FROM users WHERE id = $1", [fileUploadTestUserId]);
+    }
     // Cleanup test files
-    if (fs.existsSync(testFilePath)) {
+    if (testFilePath && fs.existsSync(testFilePath)) {
       fs.unlinkSync(testFilePath);
     }
-    const testDir = path.dirname(testFilePath);
-    if (fs.existsSync(testDir)) {
+    const testDir = testFilePath ? path.dirname(testFilePath) : '';
+    if (testDir && fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
     }
   });
@@ -248,9 +270,9 @@ describe('File Upload System Tests', () => {
 
   describe('File Upload API', () => {
     it('should reject files without authentication', async () => {
+      // POST without Authorization; avoid .attach() so server can respond 401 before connection issues
       const response = await request(app)
-        .post('/api/upload/image')
-        .attach('image', testFilePath);
+        .post('/api/upload/image');
 
       expect(response.status).toBe(401);
     });

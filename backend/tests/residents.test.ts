@@ -427,7 +427,10 @@ describe('Resident Management Tests', () => {
           building_id: testBuildingId,
           flat_number: '108'
         });
-      deleteTestResidentId = deleteTestResident.body.user.id;
+      expect(deleteTestResident.status).toBe(201);
+      const user = deleteTestResident.body.data?.user ?? deleteTestResident.body.user;
+      expect(user).toBeDefined();
+      deleteTestResidentId = user.id;
     });
 
     it('should delete resident by super admin', async () => {

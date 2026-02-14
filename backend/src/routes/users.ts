@@ -246,6 +246,39 @@ router.put("/:id", authenticate, async (req: AuthenticatedRequest, res) => {
       );
     }
 
+    // Restrict admin from moving user to another building (strict string compare for UUIDs)
+    if (
+      building_id != null &&
+      user.role === "admin" &&
+      String(building_id) !== String(user.buildingId ?? "")
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: "Admins cannot transfer users to other buildings",
+      });
+    }
+
+    // Validate phone number format if provided
+    if (req.body.phone !== undefined && req.body.phone !== null) {
+      const phoneRegex = /^\+?[\d\s-]{10,}$/;
+      if (!phoneRegex.test(String(req.body.phone).trim())) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid phone number format",
+        });
+      }
+    }
+
+    // Validate flat number if provided (reject empty or whitespace-only)
+    if (flat_number !== undefined && flat_number !== null) {
+      if (String(flat_number).trim() === "") {
+        return res.status(400).json({
+          success: false,
+          error: "Flat number cannot be empty",
+        });
+      }
+    }
+
     // Check for duplicate flat number
     if (flat_number) {
       let targetBuildingId = building_id;
